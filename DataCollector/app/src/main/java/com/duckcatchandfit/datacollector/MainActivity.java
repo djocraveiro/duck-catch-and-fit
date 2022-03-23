@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
 
+        dataCollector.startListeningSensors(this);
+
         if (csvExporter.requestPermissions(this)) {
             Toast.makeText(this, getString(R.string.ready), Toast.LENGTH_SHORT).show();
             csvExporter.writeHeader(this, dataCollector.getReading());
@@ -38,12 +40,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        dataCollector.stopListeningSensors(this);
+
+        super.onPause();
+    }
+
     //#region Listeners
 
     public void onStartClick(View v) {
         setActivityRecording(true);
 
-        dataCollector.start(this);
+        dataCollector.startReadingInstance();
         showMessage(getString(R.string.report_movment_message));
     }
 
@@ -55,6 +64,10 @@ public class MainActivity extends AppCompatActivity {
         handleMovement(HumanActivityReading.JUMP_RIGHT);
     }
 
+    public void onUploadDataClick(View v) {
+        //TODO upload data.
+    }
+
     //#endregion
 
     //#endregion
@@ -64,10 +77,10 @@ public class MainActivity extends AppCompatActivity {
     private void handleMovement(String label) {
         setActivityRecording(false);
 
-        dataCollector.stop();
+        dataCollector.stopReadingInstance();
 
         HumanActivityReading reading = dataCollector.getReading();
-        reading.setLabel(label);
+        reading.setActivity(label);
 
         csvExporter.writeToFile(this, reading);
     }

@@ -1,15 +1,10 @@
 package com.duckcatchandfit.datacollector;
 
 import android.annotation.SuppressLint;
-import androidx.annotation.NonNull;
-
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toList;
-
-public class HumanActivityReading implements Cloneable, ICsvData {
+public class HumanActivityReading implements ICsvData {
 
     //#region Constants
 
@@ -20,24 +15,34 @@ public class HumanActivityReading implements Cloneable, ICsvData {
 
     //#region Fields
 
-    private final int instanceSize;
     private Date startDate;
     private Date endDate;
-    private List<float[]> accelerometerReadings;
-    private List<float[]> gyroscopeReadings;
-    private String label;
+    private int accelerometerAccuracy;
+    private final List<Float> accelerometerX;
+    private final List<Float> accelerometerY;
+    private final List<Float> accelerometerZ;
+    private int gyroscopeAccuracy;
+    private final List<Float> gyroscopeX;
+    private final List<Float> gyroscopeY;
+    private final List<Float> gyroscopeZ;
+    private String activity;
 
     //#endregion
 
     //#region Initializers
 
     public HumanActivityReading(int instanceSize) {
-        this.instanceSize = instanceSize;
         this.startDate = new Date();
         this.endDate = new Date();
-        this.accelerometerReadings = new ArrayList<>(instanceSize);
-        this.gyroscopeReadings = new ArrayList<>(instanceSize);
-        this.label = "";
+        this.accelerometerAccuracy = 0;
+        this.accelerometerX = new ArrayList<>(instanceSize);
+        this.accelerometerY = new ArrayList<>(instanceSize);
+        this.accelerometerZ = new ArrayList<>(instanceSize);
+        this.gyroscopeAccuracy = 0;
+        this.gyroscopeX = new ArrayList<>(instanceSize);
+        this.gyroscopeY = new ArrayList<>(instanceSize);
+        this.gyroscopeZ = new ArrayList<>(instanceSize);
+        this.activity = "UNKNOWN";
     }
 
     //#endregion
@@ -50,35 +55,30 @@ public class HumanActivityReading implements Cloneable, ICsvData {
     public Date getEndDate() { return endDate; }
     public void setEndDate(Date endDate) { this.endDate = endDate; }
 
-    public List<float[]> getAccelerometerReadings() { return accelerometerReadings; }
+    public int getAccelerometerAccuracy() { return accelerometerAccuracy; }
+    public void setAccelerometerAccuracy(int accelerometerAccuracy) {
+        this.accelerometerAccuracy = accelerometerAccuracy;
+    }
 
-    public List<float[]> getGyroscopeReadings() { return gyroscopeReadings; }
+    public List<Float> getAccelerometerX() { return accelerometerX; }
+    public List<Float> getAccelerometerY() { return accelerometerY; }
+    public List<Float> getAccelerometerZ() { return accelerometerZ; }
 
-    public String getLabel() { return label; }
-    public void setLabel(String label) { this.label = label; }
+    public int getGyroscopeAccuracy() { return gyroscopeAccuracy; }
+    public void setGyroscopeAccuracy(int gyroscopeAccuracy) {
+        this.gyroscopeAccuracy = gyroscopeAccuracy;
+    }
+
+    public List<Float> getGyroscopeX() { return gyroscopeX; }
+    public List<Float> getGyroscopeY() { return gyroscopeY; }
+    public List<Float> getGyroscopeZ() { return gyroscopeZ; }
+
+    public String getActivity() { return activity; }
+    public void setActivity(String activity) { this.activity = activity; }
 
     //#endregion
 
     //#region Public Methods
-
-    //#region Cloneable Methods
-
-    @NonNull
-    @Override
-    public Object clone() {
-        HumanActivityReading clone = new HumanActivityReading(this.instanceSize);
-
-        clone.startDate = (Date)this.startDate.clone();
-        clone.endDate = (Date)this.endDate.clone();
-        clone.accelerometerReadings = this.accelerometerReadings.stream()
-            .map(float[]::clone).collect(toList());
-        clone.gyroscopeReadings = this.gyroscopeReadings.stream()
-                .map(float[]::clone).collect(toList());
-
-        return clone;
-    }
-
-    //#endregion
 
     //#region ICsvData Methods
 
@@ -86,9 +86,15 @@ public class HumanActivityReading implements Cloneable, ICsvData {
     public String toCsvHeader(String colSeparator) {
         return "startDate" + colSeparator +
             "endDate" + colSeparator +
-            "accelerometer" + colSeparator +
-            "gyroscope" + colSeparator +
-            "label";
+            "accelerometer-accuracy" + colSeparator +
+            "accelerometer-x" + colSeparator +
+            "accelerometer-y" + colSeparator +
+            "accelerometer-z" + colSeparator +
+            "gyroscope-accuracy" + colSeparator +
+            "gyroscope-x" + colSeparator +
+            "gyroscope-y" + colSeparator +
+            "gyroscope-z" + colSeparator +
+            "activity";
     }
 
     @Override
@@ -98,14 +104,16 @@ public class HumanActivityReading implements Cloneable, ICsvData {
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         return dateFormat.format(getStartDate()) + colSeparator +
-                dateFormat.format(getEndDate()) + colSeparator +
-            getAccelerometerReadings().stream()
-                .map(n -> Arrays.toString(n))
-                .collect(Collectors.joining(",", "[", "]")) + colSeparator +
-            getGyroscopeReadings().stream()
-                    .map(n -> Arrays.toString(n))
-                    .collect(Collectors.joining(",", "[", "]")) + colSeparator +
-            getLabel();
+            dateFormat.format(getEndDate()) + colSeparator +
+            getAccelerometerAccuracy() + colSeparator +
+            Arrays.toString(getAccelerometerX().toArray()) + colSeparator +
+            Arrays.toString(getAccelerometerY().toArray()) + colSeparator +
+            Arrays.toString(getAccelerometerZ().toArray()) + colSeparator +
+            getGyroscopeAccuracy() + colSeparator +
+            Arrays.toString(getGyroscopeX().toArray()) + colSeparator +
+            Arrays.toString(getGyroscopeY().toArray()) + colSeparator +
+            Arrays.toString(getGyroscopeZ().toArray()) + colSeparator +
+            getActivity();
     }
 
     //#endregion
