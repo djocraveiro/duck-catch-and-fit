@@ -24,6 +24,12 @@ public class CsvExporter {
 
     //#endregion
 
+    //#region Properties
+
+    public String getFileName() { return fileName; }
+
+    //#endregion
+
     //#region Initializers
 
     public CsvExporter(String fileName) {

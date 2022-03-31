@@ -9,16 +9,22 @@ import java.util.concurrent.Executors;
 // Src: https://rkay301.medium.com/android-programming-simple-concurrency-w-o-asynctask-or-rxjava-2899d568f849
 public class ApplicationExecutors {
 
+    //#region Fields
+
     private final Executor background;
     private final Executor mainThread;
 
-    public Executor getBackground() {
-        return background;
-    }
+    //#endregion
 
-    public Executor getMainThread() {
-        return mainThread;
-    }
+    //#region Properties
+
+    public Executor getBackground() { return background; }
+
+    public Executor getMainThread() { return mainThread; }
+
+    //#endregion
+
+    //#region Initializers
 
     public ApplicationExecutors() {
         this.background = Executors.newSingleThreadExecutor();
@@ -26,7 +32,7 @@ public class ApplicationExecutors {
     }
 
     private static class MainThreadExecutor implements Executor {
-        private Handler mainThreadHandler = new Handler(
+        private final Handler mainThreadHandler = new Handler(
                 Looper.getMainLooper()
         );
 
@@ -35,4 +41,6 @@ public class ApplicationExecutors {
             mainThreadHandler.post(command);
         }
     }
+
+    //#endregion
 }

@@ -24,7 +24,7 @@
             android:padding="4dp" android:layout_margin="4dp" android:layout_marginStart="18dp"
             app:layout_constraintStart_toEndOf="@+id/buttonJumpLeft"
             app:layout_constraintEnd_toStartOf="@+id/buttonJumpRight" android:layout_marginEnd="48dp"
-            android:visibility="visible" android:onClick="onUploadDataClick"
+            android:visibility="visible" android:onClick="onUploadClick"
             app:layout_constraintHorizontal_bias="1.0" app:layout_constraintBottom_toBottomOf="parent"
             android:layout_marginBottom="16dp"/>
     <Button

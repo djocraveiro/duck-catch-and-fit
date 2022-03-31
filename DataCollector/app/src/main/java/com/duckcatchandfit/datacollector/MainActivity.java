@@ -6,12 +6,18 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity {
 
     //#region Fields
 
+    private final ApplicationExecutors exec = new ApplicationExecutors();
+    private final FileServer fileServer = new FileServer();
     private final DataCollector dataCollector = new DataCollector();
-    private  final CsvExporter csvExporter = new CsvExporter("test_file.csv");
+    private final CsvExporter csvExporter = new CsvExporter(getExportFileName());
 
     //#endregion
 
@@ -21,6 +27,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        fileServer.setHostAddress(BuildConfig.SFTP_HOST);
+        fileServer.setUsername(BuildConfig.SFTP_USR);
+        fileServer.setPassword(BuildConfig.SFTP_PWD);
+        fileServer.setRemoteDirectory(BuildConfig.SFTP_DIR);
 
         showMessage(getString(R.string.press_start_message));
     }
@@ -64,8 +75,15 @@ public class MainActivity extends AppCompatActivity {
         handleMovement(HumanActivityReading.JUMP_RIGHT);
     }
 
-    public void onUploadDataClick(View v) {
-        //TODO upload data.
+    public void onUploadClick(View v) {
+        exec.getBackground().execute(() -> {
+            String filePath = getFilesDir() + "/" + csvExporter.getFileName();
+            boolean success = fileServer.uploadFile(filePath);
+
+            exec.getMainThread().execute(() -> {
+                Toast.makeText(this, "Upload Data: " + success, Toast.LENGTH_SHORT).show();
+            });
+        });
     }
 
     //#endregion
@@ -103,6 +121,11 @@ public class MainActivity extends AppCompatActivity {
 
         findViewById(R.id.buttonJumpLeft).setVisibility(movementsVisibility);
         findViewById(R.id.buttonJumpRight).setVisibility(movementsVisibility);
+    }
+
+    private static String getExportFileName() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault());
+        return dateFormat.format(new Date()) + ".csv";
     }
 
     //#endregion
