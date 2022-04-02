@@ -8,4 +8,7 @@
     <string name="press_start_message">Press start and make a movement.</string>
     <string name="report_movment_message">What was your movement?</string>
     <string name="upload_data">Upload Data</string>
+    <string name="fake_jump_right">FAKE Jump Right</string>
+    <string name="other">Other</string>
+    <string name="fake_jump_left">FAKE Jump Left</string>
 </resources>

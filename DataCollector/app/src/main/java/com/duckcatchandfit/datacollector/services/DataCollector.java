@@ -1,12 +1,18 @@
-package com.duckcatchandfit.datacollector;
+package com.duckcatchandfit.datacollector.services;
 
 import android.content.Context;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.widget.Toast;
+import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
+import com.duckcatchandfit.datacollector.models.ActivityReading;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static android.content.Context.SENSOR_SERVICE;
 import static android.util.Half.EPSILON;
@@ -20,28 +26,53 @@ public class DataCollector implements SensorEventListener {
     //#region Fields
 
     private static final int INSTANCE_SIZE = 50;
+    private static final int COLLECT_INTERVAL = 20; // milliseconds
 
     private SensorManager sensorManager;
-    private HumanActivityReading reading;
+    private ActivityReading reading;
     private final float[] gravity = new float[3];
     private final float[] acceleration = new float[3];
     private final float[] deltaRotationVector = new float[4];
+    private int accelerometerAccuracy;
+    private int gyroscopeAccuracy;
     private float timestamp;
+
+    private ICollectListener collectListener = null;
+    private final ApplicationExecutors exec = new ApplicationExecutors();
+    private final Timer timer = new Timer("data-collector");
+    private final TimerTask collectTask = new TimerTask() {
+        @Override
+        public void run() {
+            exec.getBackground().execute(() -> {
+                reading.setAccelerometerAccuracy(accelerometerAccuracy);
+                reading.getAccelerometerX().add(acceleration[0]);
+                reading.getAccelerometerY().add(acceleration[1]);
+                reading.getAccelerometerZ().add(acceleration[2]);
+
+                reading.setGyroscopeAccuracy(gyroscopeAccuracy);
+                reading.getGyroscopeX().add(deltaRotationVector[0]);
+                reading.getGyroscopeY().add(deltaRotationVector[1]);
+                reading.getGyroscopeZ().add(deltaRotationVector[2]);
+            });
+        }
+    };
 
     //#endregion
 
     //#region Properties
 
-    public HumanActivityReading getReading() {
+    public ActivityReading getReading() {
         return reading;
     }
+
+    public void setCollectListener(ICollectListener collectListener) { this.collectListener = collectListener; }
 
     //#endregion
 
     //#region Initializers
 
     public DataCollector() {
-        reading = new HumanActivityReading(INSTANCE_SIZE);
+        this.reading = new ActivityReading(INSTANCE_SIZE);
     }
 
     //#endregion
@@ -67,16 +98,16 @@ public class DataCollector implements SensorEventListener {
     }
 
     public void startReadingInstance() {
-        reading = new HumanActivityReading(INSTANCE_SIZE);
+        reading = new ActivityReading(INSTANCE_SIZE);
         reading.setStartDate(new Date());
 
-        //TODO start copy thread
+        timer.schedule(collectTask, 1, COLLECT_INTERVAL);
     }
 
     public void stopReadingInstance() {
         reading.setEndDate(new Date());
 
-        //TODO stop copy thread
+        timer.cancel();
     }
 
     //#region SensorEventListener
@@ -87,10 +118,7 @@ public class DataCollector implements SensorEventListener {
             return;
         }
 
-        if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
-            System.arraycopy(event.values, 0, gravity, 0, event.values.length);
-        }
-        else if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             handleAccelerometerEvent(event);
         }
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
@@ -105,10 +133,10 @@ public class DataCollector implements SensorEventListener {
         }
 
         if (sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            reading.setAccelerometerAccuracy(accuracy);
+            accelerometerAccuracy = accuracy;
         }
         else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-            reading.setGyroscopeAccuracy(accuracy);
+            gyroscopeAccuracy = accuracy;
         }
     }
 
@@ -156,14 +184,19 @@ public class DataCollector implements SensorEventListener {
         linearAcceleration[2] = event.values[2] - gravity[2];
 
         // Update acceleration X, Y and Z
+        boolean changed = false;
         for(int axis = 0; axis < 3; axis++) {
             if (Math.abs(linearAcceleration[axis] - acceleration[axis]) > NOISE) {
                 acceleration[axis] = linearAcceleration[axis];
+                changed = true;
             }
         }
 
-        //TODO: verificar que com o smartphone parado tem de ficar a tudo a 0;
-        //gravar uma linha no ficheiro a cada 50ms
+        if (changed && collectListener != null) {
+            exec.getMainThread().execute(() -> {
+                collectListener.onChange(Sensor.TYPE_ACCELEROMETER, acceleration);
+            });
+        }
     }
 
     //#endregion

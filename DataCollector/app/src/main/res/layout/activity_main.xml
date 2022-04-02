@@ -5,7 +5,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".MainActivity">
+        tools:context=".ui.MainActivity">
     <Button
             android:text="@string/start"
             android:layout_width="0dp"
@@ -16,7 +16,7 @@
             app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="318dp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="632dp"
             android:visibility="visible" android:onClick="onStartClick"
-    />
+            android:minHeight="54dp"/>
     <Button
             android:text="@string/upload_data"
             android:layout_width="0dp"
@@ -35,7 +35,7 @@
             android:layout_marginStart="16dp" app:layout_constraintEnd_toStartOf="@+id/buttonStart"
             android:layout_marginEnd="32dp" app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="310dp"
             app:layout_constraintBottom_toBottomOf="parent" android:layout_marginBottom="616dp"
-            android:visibility="invisible" android:onClick="onJumpLeftClick"/>
+            android:visibility="invisible" android:onClick="onJumpLeftClick" android:minHeight="54dp"/>
     <Button
             android:text="@string/jump_right"
             android:layout_width="0dp"
@@ -44,7 +44,39 @@
             app:layout_constraintStart_toEndOf="@+id/buttonStart" android:layout_marginEnd="56dp"
             app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="310dp" app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginBottom="616dp" android:visibility="invisible" android:onClick="onJumpRightClick"/>
+            android:layout_marginBottom="616dp" android:visibility="invisible" android:onClick="onJumpRightClick"
+            android:minHeight="54dp"/>
+    <Button
+            android:text="@string/fake_jump_left"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" android:id="@+id/buttonFakeJumpLeft"
+            android:padding="4dp" android:layout_margin="4dp"
+            android:visibility="invisible" android:onClick="onFakeJumpLeftClick"
+            android:layout_marginTop="26dp"
+            app:layout_constraintTop_toBottomOf="@+id/buttonJumpLeft" app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginStart="5dp"
+            app:layout_constraintEnd_toStartOf="@+id/buttonOther" android:layout_marginEnd="4dp"
+            android:minHeight="54dp"/>
+    <Button
+            android:text="@string/fake_jump_right"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" android:id="@+id/buttonFakeJumpRight"
+            android:padding="4dp" android:layout_margin="4dp"
+            android:visibility="invisible" android:onClick="onFakeJumpRightClick"
+            android:layout_marginEnd="4dp" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginStart="30dp"
+            app:layout_constraintStart_toEndOf="@+id/buttonOther" android:layout_marginTop="26dp"
+            app:layout_constraintTop_toBottomOf="@+id/buttonJumpRight" android:minHeight="54dp"/>
+    <Button
+            android:text="@string/other"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" android:id="@+id/buttonOther"
+            android:padding="4dp" android:layout_margin="4dp"
+            android:visibility="invisible" android:onClick="onOtherClick"
+            android:layout_marginStart="6dp" app:layout_constraintStart_toEndOf="@+id/buttonFakeJumpLeft"
+            android:layout_marginTop="26dp" app:layout_constraintTop_toBottomOf="@+id/buttonStart"
+            app:layout_constraintEnd_toStartOf="@+id/buttonFakeJumpRight" android:layout_marginEnd="5dp"
+            android:minHeight="54dp"/>
     <TextView
             android:text=""
             android:layout_width="match_parent"

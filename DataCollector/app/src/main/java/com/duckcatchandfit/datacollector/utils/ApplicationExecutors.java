@@ -1,4 +1,4 @@
-package com.duckcatchandfit.datacollector;
+package com.duckcatchandfit.datacollector.utils;
 
 import android.os.Handler;
 import android.os.Looper;

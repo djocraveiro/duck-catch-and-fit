@@ -1,4 +1,4 @@
-package com.duckcatchandfit.datacollector;
+package com.duckcatchandfit.datacollector.storage;
 
 public interface ICsvData {
 

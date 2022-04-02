@@ -1,15 +1,20 @@
-package com.duckcatchandfit.datacollector;
+package com.duckcatchandfit.datacollector.models;
 
 import android.annotation.SuppressLint;
+import com.duckcatchandfit.datacollector.storage.ICsvData;
+
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class HumanActivityReading implements ICsvData {
+public class ActivityReading implements ICsvData {
 
     //#region Constants
 
     public static final String JUMP_LEFT = "jump_left";
+    public static final String FAKE_JUMP_LEFT = "fake_jump_left";
     public static final String JUMP_RIGHT = "jump_right";
+    public static final String FAKE_JUMP_RIGHT = "fake_jump_right";
+    public static final String OTHER = "other";
 
     //#endregion
 
@@ -31,7 +36,7 @@ public class HumanActivityReading implements ICsvData {
 
     //#region Initializers
 
-    public HumanActivityReading(int instanceSize) {
+    public ActivityReading(int instanceSize) {
         this.startDate = new Date();
         this.endDate = new Date();
         this.accelerometerAccuracy = 0;
@@ -103,17 +108,17 @@ public class HumanActivityReading implements ICsvData {
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        return dateFormat.format(getStartDate()) + colSeparator +
-            dateFormat.format(getEndDate()) + colSeparator +
-            getAccelerometerAccuracy() + colSeparator +
-            Arrays.toString(getAccelerometerX().toArray()) + colSeparator +
-            Arrays.toString(getAccelerometerY().toArray()) + colSeparator +
-            Arrays.toString(getAccelerometerZ().toArray()) + colSeparator +
-            getGyroscopeAccuracy() + colSeparator +
-            Arrays.toString(getGyroscopeX().toArray()) + colSeparator +
-            Arrays.toString(getGyroscopeY().toArray()) + colSeparator +
-            Arrays.toString(getGyroscopeZ().toArray()) + colSeparator +
-            getActivity();
+        return dateFormat.format(startDate) + colSeparator +
+            dateFormat.format(endDate) + colSeparator +
+            accelerometerAccuracy + colSeparator +
+            Arrays.toString(accelerometerX.toArray()) + colSeparator +
+            Arrays.toString(accelerometerY.toArray()) + colSeparator +
+            Arrays.toString(accelerometerZ.toArray()) + colSeparator +
+            gyroscopeAccuracy + colSeparator +
+            Arrays.toString(gyroscopeX.toArray()) + colSeparator +
+            Arrays.toString(gyroscopeY.toArray()) + colSeparator +
+            Arrays.toString(gyroscopeZ.toArray()) + colSeparator +
+            activity;
     }
 
     //#endregion

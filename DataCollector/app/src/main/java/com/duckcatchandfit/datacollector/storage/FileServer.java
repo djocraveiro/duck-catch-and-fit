@@ -1,4 +1,4 @@
-package com.duckcatchandfit.datacollector;
+package com.duckcatchandfit.datacollector.storage;
 
 import com.jcraft.jsch.*;
 

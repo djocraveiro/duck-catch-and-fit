@@ -1,4 +1,4 @@
-package com.duckcatchandfit.datacollector;
+package com.duckcatchandfit.datacollector.storage;
 
 import android.Manifest;
 import android.app.Activity;
@@ -15,7 +15,7 @@ import java.io.OutputStreamWriter;
  * https://stackoverflow.com/questions/14376807/read-write-string-from-to-a-file-in-android
  * https://www.geeksforgeeks.org/external-storage-in-android-with-example/
  */
-public class CsvExporter {
+public class CsvStorage {
 
     //#region Fields
 
@@ -32,7 +32,7 @@ public class CsvExporter {
 
     //#region Initializers
 
-    public CsvExporter(String fileName) {
+    public CsvStorage(String fileName) {
         this.fileName = fileName;
     }
 
