@@ -5,6 +5,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.util.Log;
 import android.widget.Toast;
 import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
@@ -39,23 +40,7 @@ public class DataCollector implements SensorEventListener {
 
     private ICollectListener collectListener = null;
     private final ApplicationExecutors exec = new ApplicationExecutors();
-    private final Timer timer = new Timer("data-collector");
-    private final TimerTask collectTask = new TimerTask() {
-        @Override
-        public void run() {
-            exec.getBackground().execute(() -> {
-                reading.setAccelerometerAccuracy(accelerometerAccuracy);
-                reading.getAccelerometerX().add(acceleration[0]);
-                reading.getAccelerometerY().add(acceleration[1]);
-                reading.getAccelerometerZ().add(acceleration[2]);
-
-                reading.setGyroscopeAccuracy(gyroscopeAccuracy);
-                reading.getGyroscopeX().add(deltaRotationVector[0]);
-                reading.getGyroscopeY().add(deltaRotationVector[1]);
-                reading.getGyroscopeZ().add(deltaRotationVector[2]);
-            });
-        }
-    };
+    private Timer timer;
 
     //#endregion
 
@@ -101,13 +86,33 @@ public class DataCollector implements SensorEventListener {
         reading = new ActivityReading(INSTANCE_SIZE);
         reading.setStartDate(new Date());
 
-        timer.schedule(collectTask, 1, COLLECT_INTERVAL);
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                exec.getBackground().execute(() -> {
+                    Log.d("DataCollector", "collect-task-running");
+
+                    reading.setAccelerometerAccuracy(accelerometerAccuracy);
+                    reading.getAccelerometerX().add(acceleration[0]);
+                    reading.getAccelerometerY().add(acceleration[1]);
+                    reading.getAccelerometerZ().add(acceleration[2]);
+
+                    reading.setGyroscopeAccuracy(gyroscopeAccuracy);
+                    reading.getGyroscopeX().add(deltaRotationVector[0]);
+                    reading.getGyroscopeY().add(deltaRotationVector[1]);
+                    reading.getGyroscopeZ().add(deltaRotationVector[2]);
+                });
+            }
+        },
+        1, COLLECT_INTERVAL);
     }
 
     public void stopReadingInstance() {
         reading.setEndDate(new Date());
 
         timer.cancel();
+        timer.purge();
     }
 
     //#region SensorEventListener

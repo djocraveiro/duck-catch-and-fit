@@ -8,8 +8,7 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
 
 /* Sources:
  * https://stackoverflow.com/questions/14376807/read-write-string-from-to-a-file-in-android
@@ -21,12 +20,15 @@ public class CsvStorage {
 
     private final String fileName;
     private final String colSeparator = ";";
+    private boolean hasHeader = false;
 
     //#endregion
 
     //#region Properties
 
     public String getFileName() { return fileName; }
+
+    public boolean hasHeader() { return hasHeader; }
 
     //#endregion
 
@@ -46,7 +48,11 @@ public class CsvStorage {
     }
 
     public void writeHeader(Context context, ICsvData data) {
-        writeToFile(context, data.toCsvHeader(this.colSeparator));
+        if (!getFile(context).exists()) {
+            writeToFile(context, data.toCsvHeader(this.colSeparator));
+        }
+
+        hasHeader = true;
     }
 
     public void writeToFile(Context context, ICsvData data) {
@@ -55,13 +61,13 @@ public class CsvStorage {
 
     public void writeToFile(Context context, String data) {
         try {
-            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(
-                context.openFileOutput(this.fileName, Context.MODE_PRIVATE));
-            outputStreamWriter.write(data);
-            outputStreamWriter.close();
+            FileWriter writer = new FileWriter(getFile(context), true);
+            writer.append(data).append("\n");
+            writer.flush();
+            writer.close();
         }
         catch (IOException ex) {
-            Log.e("Exception", "File write failed: " + ex);
+            Log.e("CsvStorage", "File write failed: " + ex);
         }
     }
 
@@ -97,6 +103,10 @@ public class CsvStorage {
         }
 
         return canWrite;
+    }
+
+    private File getFile(Context context) {
+        return new File(context.getFilesDir() + "/" + fileName);
     }
 
     //#endregion

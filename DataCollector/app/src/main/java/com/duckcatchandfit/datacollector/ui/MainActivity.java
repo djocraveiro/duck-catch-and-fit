@@ -15,6 +15,7 @@ import com.duckcatchandfit.datacollector.R;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
 import com.duckcatchandfit.datacollector.storage.CsvStorage;
 import com.duckcatchandfit.datacollector.storage.FileServer;
+import com.duckcatchandfit.datacollector.utils.Hashing;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -64,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
 
         if (csvExporter.requestPermissions(this)) {
             Toast.makeText(this, getString(R.string.ready), Toast.LENGTH_SHORT).show();
-            csvExporter.writeHeader(this, dataCollector.getReading());
         }
         else {
             Toast.makeText(this, getString(R.string.permission_required), Toast.LENGTH_SHORT).show();
@@ -132,6 +132,10 @@ public class MainActivity extends AppCompatActivity {
         ActivityReading reading = dataCollector.getReading();
         reading.setActivity(label);
 
+        if (!csvExporter.hasHeader()) {
+            csvExporter.writeHeader(this, reading);
+        }
+
         csvExporter.writeToFile(this, reading);
     }
 
@@ -160,8 +164,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static String getExportFileName() {
-        int hash = (Build.MANUFACTURER + Build.MODEL + Build.FINGERPRINT).hashCode();
+        String hash = Hashing.getMD5Hash(Build.MANUFACTURER + Build.MODEL + Build.FINGERPRINT);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
+
         return dateFormat.format(new Date()) + "-" + hash + ".csv";
     }
 
