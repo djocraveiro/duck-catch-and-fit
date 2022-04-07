@@ -1,7 +1,9 @@
 package com.duckcatchandfit.datacollector.models;
 
 import android.annotation.SuppressLint;
+import android.os.Build;
 import com.duckcatchandfit.datacollector.storage.ICsvData;
+import com.duckcatchandfit.datacollector.utils.Hashing;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -30,7 +32,12 @@ public class ActivityReading implements ICsvData {
     private final List<Float> gyroscopeX;
     private final List<Float> gyroscopeY;
     private final List<Float> gyroscopeZ;
+    private int magneticFieldAccuracy;
+    private final List<Float> orientationAngleX;
+    private final List<Float> orientationAngleY;
+    private final List<Float> orientationAngleZ;
     private String activity;
+    private String deviceId;
 
     //#endregion
 
@@ -47,7 +54,12 @@ public class ActivityReading implements ICsvData {
         this.gyroscopeX = new ArrayList<>(instanceSize);
         this.gyroscopeY = new ArrayList<>(instanceSize);
         this.gyroscopeZ = new ArrayList<>(instanceSize);
+        this.magneticFieldAccuracy = 0;
+        this.orientationAngleX = new ArrayList<>(instanceSize);
+        this.orientationAngleY = new ArrayList<>(instanceSize);
+        this.orientationAngleZ = new ArrayList<>(instanceSize);
         this.activity = "UNKNOWN";
+        this.deviceId = "UNKNOWN";
     }
 
     //#endregion
@@ -78,8 +90,20 @@ public class ActivityReading implements ICsvData {
     public List<Float> getGyroscopeY() { return gyroscopeY; }
     public List<Float> getGyroscopeZ() { return gyroscopeZ; }
 
+    public int getMagneticFieldAccuracy() { return magneticFieldAccuracy; }
+    public void setMagneticFieldAccuracy(int magneticFieldAccuracy) {
+        this.magneticFieldAccuracy = magneticFieldAccuracy;
+    }
+
+    public List<Float> getOrientationAngleX() { return orientationAngleX; }
+    public List<Float> getOrientationAngleY() { return orientationAngleY; }
+    public List<Float> getOrientationAngleZ() { return orientationAngleZ; }
+
     public String getActivity() { return activity; }
     public void setActivity(String activity) { this.activity = activity; }
+
+    public String getDeviceId() { return deviceId; }
+    public void setDeviceId(String deviceId) {this.deviceId = deviceId; }
 
     //#endregion
 
@@ -92,14 +116,19 @@ public class ActivityReading implements ICsvData {
         return "startDate" + colSeparator +
             "endDate" + colSeparator +
             "accelerometer-accuracy" + colSeparator +
-            "accelerometer-x" + colSeparator +
-            "accelerometer-y" + colSeparator +
-            "accelerometer-z" + colSeparator +
+            "accelerometer-x-m/s^2" + colSeparator +
+            "accelerometer-y-m/s^2" + colSeparator +
+            "accelerometer-z-m/s^2" + colSeparator +
             "gyroscope-accuracy" + colSeparator +
-            "gyroscope-x" + colSeparator +
-            "gyroscope-y" + colSeparator +
-            "gyroscope-z" + colSeparator +
-            "activity";
+            "gyroscope-x-rad/s" + colSeparator +
+            "gyroscope-y-rad/s" + colSeparator +
+            "gyroscope-z-rad/s" + colSeparator +
+            "magnetic-field-accuracy" + colSeparator +
+            "orientation-angle-x-rad" + colSeparator +
+            "orientation-angle-y-rad" + colSeparator +
+            "orientation-angle-z-rad" + colSeparator +
+            "activity" + colSeparator +
+            "device-id";
     }
 
     @Override
@@ -118,7 +147,12 @@ public class ActivityReading implements ICsvData {
             Arrays.toString(gyroscopeX.toArray()) + colSeparator +
             Arrays.toString(gyroscopeY.toArray()) + colSeparator +
             Arrays.toString(gyroscopeZ.toArray()) + colSeparator +
-            activity;
+            magneticFieldAccuracy + colSeparator +
+            Arrays.toString(orientationAngleX.toArray()) + colSeparator +
+            Arrays.toString(orientationAngleY.toArray()) + colSeparator +
+            Arrays.toString(orientationAngleZ.toArray()) + colSeparator +
+            activity + colSeparator +
+            deviceId;
     }
 
     //#endregion

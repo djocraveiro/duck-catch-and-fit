@@ -15,6 +15,7 @@ import com.duckcatchandfit.datacollector.R;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
 import com.duckcatchandfit.datacollector.storage.CsvStorage;
 import com.duckcatchandfit.datacollector.storage.FileServer;
+import com.duckcatchandfit.datacollector.utils.Device;
 import com.duckcatchandfit.datacollector.utils.Hashing;
 
 import java.text.SimpleDateFormat;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private final FileServer fileServer = new FileServer();
     private final DataCollector dataCollector = new DataCollector();
     private final CsvStorage csvExporter = new CsvStorage(getExportFileName());
+    private final String deviceId = Device.getDeviceId();
 
     //#endregion
 
@@ -131,6 +133,7 @@ public class MainActivity extends AppCompatActivity {
 
         ActivityReading reading = dataCollector.getReading();
         reading.setActivity(label);
+        reading.setDeviceId(deviceId);
 
         if (!csvExporter.hasHeader()) {
             csvExporter.writeHeader(this, reading);
@@ -164,10 +167,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private static String getExportFileName() {
-        String hash = Hashing.getMD5Hash(Build.MANUFACTURER + Build.MODEL + Build.FINGERPRINT);
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd", Locale.getDefault());
 
-        return dateFormat.format(new Date()) + "-" + hash + ".csv";
+        return dateFormat.format(new Date()) + "-" + Device.getDeviceId() + ".csv";
     }
 
     //#endregion

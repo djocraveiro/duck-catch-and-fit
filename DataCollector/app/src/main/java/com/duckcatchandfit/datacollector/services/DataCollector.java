@@ -6,11 +6,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
-import android.widget.Toast;
 import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -26,17 +24,18 @@ public class DataCollector implements SensorEventListener {
 
     //#region Fields
 
-    private static final int INSTANCE_SIZE = 50;
+    private static final int INSTANCE_SIZE = 32;
     private static final int COLLECT_INTERVAL = 20; // milliseconds
 
     private SensorManager sensorManager;
     private ActivityReading reading;
     private final float[] gravity = new float[3];
     private final float[] acceleration = new float[3];
-    private final float[] deltaRotationVector = new float[4];
+    private final float[] rotationCurrent = new float[3];
+    private final float[] orientationAngles = new float[3];
     private int accelerometerAccuracy;
     private int gyroscopeAccuracy;
-    private float timestamp;
+    private int magneticFieldAccuracy;
 
     private ICollectListener collectListener = null;
     private final ApplicationExecutors exec = new ApplicationExecutors();
@@ -71,6 +70,7 @@ public class DataCollector implements SensorEventListener {
 
         registerSensor(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
         registerSensor(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
+        registerSensor(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
     }
 
     public void stopListeningSensors(Context context) {
@@ -80,6 +80,7 @@ public class DataCollector implements SensorEventListener {
 
         unregisterSensor(sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
         unregisterSensor(sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE));
+        unregisterSensor(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
     }
 
     public void startReadingInstance() {
@@ -102,6 +103,11 @@ public class DataCollector implements SensorEventListener {
                     reading.getGyroscopeX().add(deltaRotationVector[0]);
                     reading.getGyroscopeY().add(deltaRotationVector[1]);
                     reading.getGyroscopeZ().add(deltaRotationVector[2]);
+
+                    reading.setMagneticFieldAccuracy(magneticFieldAccuracy);
+                    reading.getOrientationAngleX().add(orientationAngles[0]);
+                    reading.getOrientationAngleY().add(orientationAngles[1]);
+                    reading.getOrientationAngleZ().add(orientationAngles[2]);
                 });
             }
         },
@@ -129,6 +135,9 @@ public class DataCollector implements SensorEventListener {
         else if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             handleGyroscopeEvent(event);
         }
+        else if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            handleMagneticFieldEvent(event);
+        }
     }
 
     @Override
@@ -142,6 +151,9 @@ public class DataCollector implements SensorEventListener {
         }
         else if (sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             gyroscopeAccuracy = accuracy;
+        }
+        else if (sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            magneticFieldAccuracy = accuracy;
         }
     }
 
@@ -174,9 +186,9 @@ public class DataCollector implements SensorEventListener {
 
     private static final float NOISE = 2.0f;
     private static final float ALPHA = 0.8f;
+    private final float[] linearAcceleration = new float[3];
 
     private void handleAccelerometerEvent(SensorEvent event) {
-        final float[] linearAcceleration = new float[3];
 
         // Isolate the force of gravity with the low-pass filter.
         gravity[0] = ALPHA * gravity[0] + (1 - ALPHA) * event.values[0];
@@ -208,17 +220,15 @@ public class DataCollector implements SensorEventListener {
 
     //#region Gyroscope
 
-    private static final float NS2S = 1.0f / 1000000000.0f;
+    private static final float NanoSecondsToSeconds = 1.0f / 1000000000.0f;
+    private final float[] deltaRotationVector = new float[4];
+    private float timestamp;
 
     private  void handleGyroscopeEvent(SensorEvent event) {
-        //reading.getGyroscopeX().add(event.values[0]);
-        //reading.getGyroscopeY().add(event.values[1]);
-        //reading.getGyroscopeZ().add(event.values[2]);
-
         // This timestep's delta rotation to be multiplied by the current rotation
         // after computing it from the gyro sample data.
         if (timestamp != 0) {
-            final float dT = (event.timestamp - timestamp) * NS2S;
+            final float dT = (event.timestamp - timestamp) * NanoSecondsToSeconds;
 
             // Axis of the rotation sample, not normalized yet.
             float axisX = event.values[0];
@@ -248,12 +258,49 @@ public class DataCollector implements SensorEventListener {
             deltaRotationVector[2] = sinThetaOverTwo * axisZ;
             deltaRotationVector[3] = cosThetaOverTwo;
         }
+
         timestamp = event.timestamp;
+
         float[] deltaRotationMatrix = new float[9];
         SensorManager.getRotationMatrixFromVector(deltaRotationMatrix, deltaRotationVector);
+
         // User code should concatenate the delta rotation we computed with the current rotation
         // in order to get the updated rotation.
-        // rotationCurrent = rotationCurrent * deltaRotationMatrix;
+        // rotationCurrent = rotationCurrent[0] * deltaRotationMatrix[0];
+
+        // Update rotation X, Y and Z
+        boolean changed = false;
+        for(int axis = 0; axis < 3; axis++) {
+            float newRotation = rotationCurrent[axis] * deltaRotationMatrix[axis];
+            if (Math.abs(newRotation - rotationCurrent[axis]) > NOISE) {
+                rotationCurrent[axis] = newRotation;
+                changed = true;
+            }
+        }
+
+        if (collectListener != null) {
+            exec.getMainThread().execute(() -> {
+                collectListener.onChange(Sensor.TYPE_GYROSCOPE, deltaRotationVector);
+            });
+        }
+    }
+
+    //#endregion
+
+    //#region Magnetic Field
+
+    private void handleMagneticFieldEvent(SensorEvent event) {
+        final float[] rotationMatrix = new float[9];
+
+        SensorManager.getRotationMatrix(rotationMatrix, null, gravity, event.values);
+
+        SensorManager.getOrientation(rotationMatrix, orientationAngles);
+
+        if (collectListener != null) {
+            exec.getMainThread().execute(() -> {
+                collectListener.onChange(Sensor.TYPE_MAGNETIC_FIELD, orientationAngles);
+            });
+        }
     }
 
     //#endregion
