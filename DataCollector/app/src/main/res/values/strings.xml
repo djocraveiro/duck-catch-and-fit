@@ -11,4 +11,5 @@
     <string name="fake_jump_right">FAKE Jump Right</string>
     <string name="other">Other</string>
     <string name="fake_jump_left">FAKE Jump Left</string>
+    <string name="stay">stay</string>
 </resources>

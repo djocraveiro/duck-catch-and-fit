@@ -16,6 +16,7 @@ public class ActivityReading implements ICsvData {
     public static final String FAKE_JUMP_LEFT = "fake_jump_left";
     public static final String JUMP_RIGHT = "jump_right";
     public static final String FAKE_JUMP_RIGHT = "fake_jump_right";
+    public static final String STAY = "stay";
     public static final String OTHER = "other";
 
     //#endregion

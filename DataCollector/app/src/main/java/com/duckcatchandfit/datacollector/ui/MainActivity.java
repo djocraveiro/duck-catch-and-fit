@@ -1,7 +1,6 @@
 package com.duckcatchandfit.datacollector.ui;
 
 import android.hardware.Sensor;
-import android.os.Build;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -16,7 +15,6 @@ import com.duckcatchandfit.datacollector.models.ActivityReading;
 import com.duckcatchandfit.datacollector.storage.CsvStorage;
 import com.duckcatchandfit.datacollector.storage.FileServer;
 import com.duckcatchandfit.datacollector.utils.Device;
-import com.duckcatchandfit.datacollector.utils.Hashing;
 
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -49,14 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
         showMessage(getString(R.string.press_start_message));
 
-        dataCollector.setCollectListener(new ICollectListener() {
-            @Override
-            public void onChange(int sensorType, float[] data) {
-                if (sensorType == Sensor.TYPE_ACCELEROMETER) {
-                    Toast.makeText(MainActivity.this, Arrays.toString(data), Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        //debugSensorReadings(Sensor.TYPE_ACCELEROMETER);
     }
 
     @Override
@@ -105,6 +96,10 @@ public class MainActivity extends AppCompatActivity {
         handleMovement(ActivityReading.FAKE_JUMP_RIGHT);
     }
 
+    public void onStayClick(View v) {
+        handleMovement(ActivityReading.STAY);
+    }
+
     public void onOtherClick(View v) {
         handleMovement(ActivityReading.OTHER);
     }
@@ -140,6 +135,8 @@ public class MainActivity extends AppCompatActivity {
         }
 
         csvExporter.writeToFile(this, reading);
+
+        showMessage(getString(R.string.press_start_message));
     }
 
     private void showMessage(String message) {
@@ -163,7 +160,19 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.buttonJumpRight).setVisibility(movementsVisibility);
         findViewById(R.id.buttonFakeJumpLeft).setVisibility(movementsVisibility);
         findViewById(R.id.buttonFakeJumpRight).setVisibility(movementsVisibility);
+        findViewById(R.id.buttonStay).setVisibility(movementsVisibility);
         findViewById(R.id.buttonOther).setVisibility(movementsVisibility);
+    }
+
+    private void debugSensorReadings(int debugSensorType) {
+        dataCollector.setCollectListener(new ICollectListener() {
+            @Override
+            public void onChange(int sensorType, float[] data) {
+                if (sensorType == debugSensorType) {
+                    Toast.makeText(MainActivity.this, Arrays.toString(data), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 
     private static String getExportFileName() {
