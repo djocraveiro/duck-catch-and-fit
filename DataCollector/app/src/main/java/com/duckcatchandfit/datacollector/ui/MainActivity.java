@@ -1,9 +1,10 @@
 package com.duckcatchandfit.datacollector.ui;
 
-import android.hardware.Sensor;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import com.duckcatchandfit.datacollector.services.ICollectListener;
@@ -30,6 +31,7 @@ public class MainActivity extends AppCompatActivity {
     private final DataCollector dataCollector = new DataCollector();
     private final CsvStorage csvExporter = new CsvStorage(getExportFileName());
     private final String deviceId = Device.getDeviceId();
+    private boolean isRecording = false;
 
     //#endregion
 
@@ -74,34 +76,20 @@ public class MainActivity extends AppCompatActivity {
     //#region Listeners
 
     public void onStartClick(View v) {
-        setActivityRecording(true);
+        setActivityRecording(!isRecording);
 
-        dataCollector.startReadingInstance();
-        showMessage(getString(R.string.report_movment_message));
-    }
+        if (isRecording){
+            dataCollector.startReadingInstance();
 
-    public void onJumpLeftClick(View v) {
-        handleMovement(ActivityReading.JUMP_LEFT);
-    }
+            showMessage(getString(R.string.press_stop_message));
+        }
+        else {
+            dataCollector.stopReadingInstance();
 
-    public void onFakeJumpLeftClick(View v) {
-        handleMovement(ActivityReading.FAKE_JUMP_LEFT);
-    }
+            reportMovement();
 
-    public void onJumpRightClick(View v) {
-        handleMovement(ActivityReading.JUMP_RIGHT);
-    }
-
-    public void onFakeJumpRightClick(View v) {
-        handleMovement(ActivityReading.FAKE_JUMP_RIGHT);
-    }
-
-    public void onStayClick(View v) {
-        handleMovement(ActivityReading.STAY);
-    }
-
-    public void onOtherClick(View v) {
-        handleMovement(ActivityReading.OTHER);
+            showMessage(getString(R.string.press_start_message));
+        }
     }
 
     public void onUploadClick(View v) {
@@ -121,22 +109,34 @@ public class MainActivity extends AppCompatActivity {
 
     //#region Private Methods
 
-    private void handleMovement(String label) {
-        setActivityRecording(false);
+    private void reportMovement() {
+        String[] activities = new String[] {
+            ActivityReading.JUMP_LEFT,
+            ActivityReading.JUMP_RIGHT,
+            ActivityReading.STAY,
+            ActivityReading.FAKE_JUMP_LEFT,
+            ActivityReading.FAKE_JUMP_RIGHT,
+            ActivityReading.OTHER
+        };
 
-        dataCollector.stopReadingInstance();
-
-        ActivityReading reading = dataCollector.getReading();
-        reading.setActivity(label);
+        final ActivityReading reading = dataCollector.getReading();
         reading.setDeviceId(deviceId);
 
-        if (!csvExporter.hasHeader()) {
-            csvExporter.writeHeader(this, reading);
-        }
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.report_movement_message)
+            .setCancelable(false)
+            .setItems(activities, (dialog, selectedIndex) -> {
+                dialog.dismiss();
 
-        csvExporter.writeToFile(this, reading);
+                reading.setActivity(activities[selectedIndex]);
 
-        showMessage(getString(R.string.press_start_message));
+                if (!csvExporter.hasHeader()) {
+                    csvExporter.writeHeader(this, reading);
+                }
+
+                csvExporter.writeToFile(this, reading);
+            })
+            .show();
     }
 
     private void showMessage(String message) {
@@ -145,23 +145,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setActivityRecording(boolean recording) {
-        int startVisibility = recording
+        isRecording = recording;
+
+        int startVisibility = isRecording
                 ? View.INVISIBLE
                 : View.VISIBLE;
 
-        findViewById(R.id.buttonStart).setVisibility(startVisibility);
+        Button startButton = findViewById(R.id.buttonStart);
+        startButton.setText(isRecording ? R.string.stop : R.string.start);
+
+        findViewById(R.id.buttonStart).setVisibility(View.VISIBLE);
         findViewById(R.id.buttonStartUpload).setVisibility(startVisibility);
-
-        int movementsVisibility = recording
-                ? View.VISIBLE
-                : View.INVISIBLE;
-
-        findViewById(R.id.buttonJumpLeft).setVisibility(movementsVisibility);
-        findViewById(R.id.buttonJumpRight).setVisibility(movementsVisibility);
-        findViewById(R.id.buttonFakeJumpLeft).setVisibility(movementsVisibility);
-        findViewById(R.id.buttonFakeJumpRight).setVisibility(movementsVisibility);
-        findViewById(R.id.buttonStay).setVisibility(movementsVisibility);
-        findViewById(R.id.buttonOther).setVisibility(movementsVisibility);
     }
 
     private void debugSensorReadings(int debugSensorType) {

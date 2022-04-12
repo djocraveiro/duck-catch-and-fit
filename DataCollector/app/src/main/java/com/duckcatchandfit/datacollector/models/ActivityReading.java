@@ -1,9 +1,8 @@
 package com.duckcatchandfit.datacollector.models;
 
 import android.annotation.SuppressLint;
-import android.os.Build;
 import com.duckcatchandfit.datacollector.storage.ICsvData;
-import com.duckcatchandfit.datacollector.utils.Hashing;
+import com.duckcatchandfit.datacollector.utils.MathHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -13,10 +12,10 @@ public class ActivityReading implements ICsvData {
     //#region Constants
 
     public static final String JUMP_LEFT = "jump_left";
-    public static final String FAKE_JUMP_LEFT = "fake_jump_left";
     public static final String JUMP_RIGHT = "jump_right";
-    public static final String FAKE_JUMP_RIGHT = "fake_jump_right";
     public static final String STAY = "stay";
+    public static final String FAKE_JUMP_LEFT = "fake_jump_left";
+    public static final String FAKE_JUMP_RIGHT = "fake_jump_right";
     public static final String OTHER = "other";
 
     //#endregion
@@ -39,6 +38,8 @@ public class ActivityReading implements ICsvData {
     private final List<Float> orientationAngleZ;
     private String activity;
     private String deviceId;
+
+    private final FeatureStats stats = new FeatureStats();
 
     //#endregion
 
@@ -110,53 +111,140 @@ public class ActivityReading implements ICsvData {
 
     //#region Public Methods
 
-    //#region ICsvData Methods
-
     @Override
     public String toCsvHeader(String colSeparator) {
-        return "startDate" + colSeparator +
-            "endDate" + colSeparator +
-            "accelerometer-accuracy" + colSeparator +
-            "accelerometer-x-m/s^2" + colSeparator +
-            "accelerometer-y-m/s^2" + colSeparator +
-            "accelerometer-z-m/s^2" + colSeparator +
-            "gyroscope-accuracy" + colSeparator +
-            "gyroscope-x-rad/s" + colSeparator +
-            "gyroscope-y-rad/s" + colSeparator +
-            "gyroscope-z-rad/s" + colSeparator +
-            "magnetic-field-accuracy" + colSeparator +
-            "orientation-angle-x-rad" + colSeparator +
-            "orientation-angle-y-rad" + colSeparator +
-            "orientation-angle-z-rad" + colSeparator +
-            "activity" + colSeparator +
-            "device-id";
+        StringBuilder builder = new StringBuilder();
+
+        builder.append("startDate").append(colSeparator)
+                .append("endDate").append(colSeparator);
+
+        appendAccelerometerHeader(builder, colSeparator);
+        appendGyroscopeHeader(builder, colSeparator);
+        appendMagneticFieldHeader(builder, colSeparator);
+
+        builder.append("activity").append(colSeparator)
+            .append("device-id");
+
+        return builder.toString();
     }
 
     @Override
     public String toCsvRow(String colSeparator) {
+        StringBuilder builder = new StringBuilder();
+
         @SuppressLint("SimpleDateFormat")
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
         dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        return dateFormat.format(startDate) + colSeparator +
-            dateFormat.format(endDate) + colSeparator +
-            accelerometerAccuracy + colSeparator +
-            Arrays.toString(accelerometerX.toArray()) + colSeparator +
-            Arrays.toString(accelerometerY.toArray()) + colSeparator +
-            Arrays.toString(accelerometerZ.toArray()) + colSeparator +
-            gyroscopeAccuracy + colSeparator +
-            Arrays.toString(gyroscopeX.toArray()) + colSeparator +
-            Arrays.toString(gyroscopeY.toArray()) + colSeparator +
-            Arrays.toString(gyroscopeZ.toArray()) + colSeparator +
-            magneticFieldAccuracy + colSeparator +
-            Arrays.toString(orientationAngleX.toArray()) + colSeparator +
-            Arrays.toString(orientationAngleY.toArray()) + colSeparator +
-            Arrays.toString(orientationAngleZ.toArray()) + colSeparator +
-            activity + colSeparator +
-            deviceId;
+        builder.append(dateFormat.format(startDate)).append(colSeparator)
+            .append(dateFormat.format(endDate)).append(colSeparator);
+
+        appendAccelerometerData(builder, colSeparator);
+        appendGyroscopeData(builder, colSeparator);
+        appendMagneticFieldData(builder, colSeparator);
+
+        builder.append(activity).append(colSeparator)
+            .append(deviceId);
+
+        return builder.toString();
     }
 
     //#endregion
+
+    //#region Private Methods
+
+    private void appendAccelerometerHeader(StringBuilder builder, String colSeparator) {
+        builder.append("acc-accuracy").append(colSeparator)
+            .append("acc-x-m/s^2").append(colSeparator)
+            .append("acc-y-m/s^2").append(colSeparator)
+            .append("acc-z-m/s^2").append(colSeparator);
+
+        builder.append(stats.setFeatureName("acc-x")
+                .toCsvHeader(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("acc-y")
+                .toCsvHeader(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("acc-z")
+                .toCsvHeader(colSeparator)).append(colSeparator);
+    }
+
+    private void appendAccelerometerData(StringBuilder builder, String colSeparator) {
+        builder.append(accelerometerAccuracy).append(colSeparator)
+            .append(Arrays.toString(accelerometerX.toArray())).append(colSeparator)
+            .append(Arrays.toString(accelerometerY.toArray())).append(colSeparator)
+            .append(Arrays.toString(accelerometerZ.toArray())).append(colSeparator);
+
+        builder.append(stats.setFeatureName("acc-x")
+                .calc(accelerometerX)
+                .toCsvRow(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("acc-y")
+                .calc(accelerometerY)
+                .toCsvRow(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("acc-z")
+                .calc(accelerometerZ)
+                .toCsvRow(colSeparator)).append(colSeparator);
+    }
+
+    private void appendGyroscopeHeader(StringBuilder builder, String colSeparator) {
+        builder.append("gyr-accuracy").append(colSeparator)
+            .append("gyr-x-rad/s").append(colSeparator)
+            .append("gyr-y-rad/s").append(colSeparator)
+            .append("gyr-z-rad/s").append(colSeparator);
+
+        builder.append(stats.setFeatureName("gyr-x")
+                .toCsvHeader(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("gyr-y")
+                .toCsvHeader(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("gyr-z")
+                .toCsvHeader(colSeparator)).append(colSeparator);
+    }
+
+    private void appendGyroscopeData(StringBuilder builder, String colSeparator) {
+        builder.append(gyroscopeAccuracy).append(colSeparator)
+            .append(Arrays.toString(gyroscopeX.toArray())).append(colSeparator)
+            .append(Arrays.toString(gyroscopeY.toArray())).append(colSeparator)
+            .append(Arrays.toString(gyroscopeZ.toArray())).append(colSeparator);
+
+        builder.append(stats.setFeatureName("gyr-x")
+                .calc(gyroscopeX)
+                .toCsvRow(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("gyr-y")
+                .calc(gyroscopeY)
+                .toCsvRow(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("gyr-z")
+                .calc(gyroscopeZ)
+                .toCsvRow(colSeparator)).append(colSeparator);
+    }
+
+    private void appendMagneticFieldHeader(StringBuilder builder, String colSeparator) {
+        builder.append("mag-accuracy").append(colSeparator)
+                .append("ori-angle-x-rad").append(colSeparator)
+                .append("ori-angle-y-rad").append(colSeparator)
+                .append("ori-angle-z-rad").append(colSeparator);
+
+        builder.append(stats.setFeatureName("ori-angle-x")
+                .toCsvHeader(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("ori-angle-y")
+                .toCsvHeader(colSeparator)).append(colSeparator)
+        .append(stats.setFeatureName("ori-angle-z")
+                .toCsvHeader(colSeparator)).append(colSeparator);
+    }
+
+    private void appendMagneticFieldData(StringBuilder builder, String colSeparator) {
+        builder.append(magneticFieldAccuracy).append(colSeparator)
+            .append(Arrays.toString(orientationAngleX.toArray())).append(colSeparator)
+            .append(Arrays.toString(orientationAngleY.toArray())).append(colSeparator)
+            .append(Arrays.toString(orientationAngleZ.toArray())).append(colSeparator);
+
+        builder.append(stats.setFeatureName("ori-angle-x")
+                .calc(orientationAngleX)
+                .toCsvRow(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("ori-angle-y")
+                .calc(orientationAngleY)
+                .toCsvRow(colSeparator)).append(colSeparator)
+            .append(stats.setFeatureName("ori-angle-z")
+                .calc(orientationAngleZ)
+                .toCsvRow(colSeparator)).append(colSeparator);
+    }
 
     //#endregion
 }

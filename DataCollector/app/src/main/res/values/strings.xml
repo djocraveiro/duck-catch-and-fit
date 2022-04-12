@@ -6,10 +6,12 @@
     <string name="ready">Ready</string>
     <string name="permission_required">Permission required.</string>
     <string name="press_start_message">Press start and make a movement.</string>
-    <string name="report_movment_message">What was your movement?</string>
+    <string name="report_movement_message">What was your movement?</string>
     <string name="upload_data">Upload Data</string>
     <string name="fake_jump_right">FAKE Jump Right</string>
     <string name="other">Other</string>
     <string name="fake_jump_left">FAKE Jump Left</string>
     <string name="stay">stay</string>
+    <string name="stop">Stop</string>
+    <string name="press_stop_message">Make a movement and press stop.</string>
 </resources>
