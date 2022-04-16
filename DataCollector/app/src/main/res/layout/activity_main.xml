@@ -37,5 +37,6 @@
             android:layout_marginEnd="8dp" app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.0" app:layout_constraintTop_toTopOf="parent"
             android:layout_marginTop="80dp"
-            android:layout_marginBottom="267dp" app:layout_constraintBottom_toTopOf="@+id/buttonStart"/>
+            android:layout_marginBottom="267dp" app:layout_constraintBottom_toTopOf="@+id/buttonStart"
+            android:textSize="16sp"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

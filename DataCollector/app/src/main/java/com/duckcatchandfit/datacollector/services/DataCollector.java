@@ -170,7 +170,6 @@ public class DataCollector implements SensorEventListener {
 
         sensorManager.registerListener(this,
                 sensor,
-                SensorManager.SENSOR_DELAY_GAME,
                 SensorManager.SENSOR_DELAY_GAME);
     }
 
@@ -184,7 +183,7 @@ public class DataCollector implements SensorEventListener {
 
     //#region Accelerometer
 
-    private static final float NOISE = 2.0f;
+    private static final float NOISE = 0.5f;
     private static final float ALPHA = 0.8f;
     private final float[] linearAcceleration = new float[3];
 
