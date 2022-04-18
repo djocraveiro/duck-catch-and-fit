@@ -1,5 +1,8 @@
 package com.duckcatchandfit.datacollector.services;
 
+import com.duckcatchandfit.datacollector.models.ActivityReading;
+
 public interface ICollectListener {
-    void onChange(int sensorType, float[] data);
+    void onCollectStop();
+    void onInstanceCollected(ActivityReading reading);
 }

@@ -22,9 +22,16 @@ import static java.lang.Math.*;
  */
 public class DataCollector implements SensorEventListener {
 
+    //#region Constants
+
+    public static final int COLLECT_MODE_FILL_INSTANCE = 1;
+    public static final int COLLECT_MODE_FILL_INSTANCE_LOOP = 2;
+
+    //#endregion
+
     //#region Fields
 
-    private static final int INSTANCE_SIZE = 32;
+    private static final int INSTANCE_SIZE = 64;
     private static final int COLLECT_INTERVAL = 20; // milliseconds
 
     private SensorManager sensorManager;
@@ -40,14 +47,11 @@ public class DataCollector implements SensorEventListener {
     private ICollectListener collectListener = null;
     private final ApplicationExecutors exec = new ApplicationExecutors();
     private Timer timer;
+    private boolean isCollecting;
 
     //#endregion
 
     //#region Properties
-
-    public ActivityReading getReading() {
-        return reading;
-    }
 
     public void setCollectListener(ICollectListener collectListener) { this.collectListener = collectListener; }
 
@@ -83,7 +87,9 @@ public class DataCollector implements SensorEventListener {
         unregisterSensor(sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD));
     }
 
-    public void startReadingInstance() {
+    public void startReadingInstance(final int collectMode) {
+        isCollecting = true;
+
         reading = new ActivityReading(INSTANCE_SIZE);
         reading.setStartDate(new Date());
 
@@ -94,20 +100,30 @@ public class DataCollector implements SensorEventListener {
                 exec.getBackground().execute(() -> {
                     Log.d("DataCollector", "collect-task-running");
 
-                    reading.setAccelerometerAccuracy(accelerometerAccuracy);
-                    reading.getAccelerometerX().add(acceleration[0]);
-                    reading.getAccelerometerY().add(acceleration[1]);
-                    reading.getAccelerometerZ().add(acceleration[2]);
+                    copyDataToInstance();
 
-                    reading.setGyroscopeAccuracy(gyroscopeAccuracy);
-                    reading.getGyroscopeX().add(deltaRotationVector[0]);
-                    reading.getGyroscopeY().add(deltaRotationVector[1]);
-                    reading.getGyroscopeZ().add(deltaRotationVector[2]);
+                    if (reading.isFullFilled()) {
+                        reading.setEndDate(new Date());
+                        collectListener.onInstanceCollected(reading);
 
-                    reading.setMagneticFieldAccuracy(magneticFieldAccuracy);
-                    reading.getOrientationAngleX().add(orientationAngles[0]);
-                    reading.getOrientationAngleY().add(orientationAngles[1]);
-                    reading.getOrientationAngleZ().add(orientationAngles[2]);
+                        if (collectMode == COLLECT_MODE_FILL_INSTANCE) {
+                            isCollecting = false;
+                        }
+
+                        if (!isCollecting) {
+                            timer.cancel();
+                            timer.purge();
+                            timer = null;
+
+                            exec.getMainThread().execute(() -> {
+                                collectListener.onCollectStop();
+                            });
+                            return;
+                        }
+
+                        reading = new ActivityReading(INSTANCE_SIZE);
+                        reading.setStartDate(new Date());
+                    }
                 });
             }
         },
@@ -115,10 +131,7 @@ public class DataCollector implements SensorEventListener {
     }
 
     public void stopReadingInstance() {
-        reading.setEndDate(new Date());
-
-        timer.cancel();
-        timer.purge();
+        isCollecting = false;
     }
 
     //#region SensorEventListener
@@ -181,6 +194,23 @@ public class DataCollector implements SensorEventListener {
         sensorManager.unregisterListener(this, sensor);
     }
 
+    private void copyDataToInstance() {
+        reading.setAccelerometerAccuracy(accelerometerAccuracy);
+        reading.getAccelerometerX().add(acceleration[0]);
+        reading.getAccelerometerY().add(acceleration[1]);
+        reading.getAccelerometerZ().add(acceleration[2]);
+
+        reading.setGyroscopeAccuracy(gyroscopeAccuracy);
+        reading.getGyroscopeX().add(deltaRotationVector[0]);
+        reading.getGyroscopeY().add(deltaRotationVector[1]);
+        reading.getGyroscopeZ().add(deltaRotationVector[2]);
+
+        reading.setMagneticFieldAccuracy(magneticFieldAccuracy);
+        reading.getOrientationAngleX().add(orientationAngles[0]);
+        reading.getOrientationAngleY().add(orientationAngles[1]);
+        reading.getOrientationAngleZ().add(orientationAngles[2]);
+    }
+
     //#region Accelerometer
 
     private static final float NOISE = 0.5f;
@@ -200,18 +230,10 @@ public class DataCollector implements SensorEventListener {
         linearAcceleration[2] = event.values[2] - gravity[2];
 
         // Update acceleration X, Y and Z
-        boolean changed = false;
         for(int axis = 0; axis < 3; axis++) {
             if (Math.abs(linearAcceleration[axis] - acceleration[axis]) > NOISE) {
                 acceleration[axis] = linearAcceleration[axis];
-                changed = true;
             }
-        }
-
-        if (changed && collectListener != null) {
-            exec.getMainThread().execute(() -> {
-                collectListener.onChange(Sensor.TYPE_ACCELEROMETER, acceleration);
-            });
         }
     }
 
@@ -268,19 +290,11 @@ public class DataCollector implements SensorEventListener {
         // rotationCurrent = rotationCurrent[0] * deltaRotationMatrix[0];
 
         // Update rotation X, Y and Z
-        boolean changed = false;
         for(int axis = 0; axis < 3; axis++) {
             float newRotation = rotationCurrent[axis] * deltaRotationMatrix[axis];
             if (Math.abs(newRotation - rotationCurrent[axis]) > NOISE) {
                 rotationCurrent[axis] = newRotation;
-                changed = true;
             }
-        }
-
-        if (collectListener != null) {
-            exec.getMainThread().execute(() -> {
-                collectListener.onChange(Sensor.TYPE_GYROSCOPE, deltaRotationVector);
-            });
         }
     }
 
@@ -294,12 +308,6 @@ public class DataCollector implements SensorEventListener {
         SensorManager.getRotationMatrix(rotationMatrix, null, gravity, event.values);
 
         SensorManager.getOrientation(rotationMatrix, orientationAngles);
-
-        if (collectListener != null) {
-            exec.getMainThread().execute(() -> {
-                collectListener.onChange(Sensor.TYPE_MAGNETIC_FIELD, orientationAngles);
-            });
-        }
     }
 
     //#endregion

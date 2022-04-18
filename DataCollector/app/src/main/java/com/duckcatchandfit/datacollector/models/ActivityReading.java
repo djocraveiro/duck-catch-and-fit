@@ -2,7 +2,6 @@ package com.duckcatchandfit.datacollector.models;
 
 import android.annotation.SuppressLint;
 import com.duckcatchandfit.datacollector.storage.ICsvData;
-import com.duckcatchandfit.datacollector.utils.MathHelper;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -13,7 +12,7 @@ public class ActivityReading implements ICsvData {
 
     public static final String JUMP_LEFT = "jump_left";
     public static final String JUMP_RIGHT = "jump_right";
-    public static final String STAY = "stay";
+    public static final String STAYING = "staying";
     public static final String FAKE_JUMP_LEFT = "fake_jump_left";
     public static final String FAKE_JUMP_RIGHT = "fake_jump_right";
     public static final String OTHER = "other";
@@ -22,6 +21,7 @@ public class ActivityReading implements ICsvData {
 
     //#region Fields
 
+    private int instanceSize;
     private Date startDate;
     private Date endDate;
     private int accelerometerAccuracy;
@@ -46,6 +46,7 @@ public class ActivityReading implements ICsvData {
     //#region Initializers
 
     public ActivityReading(int instanceSize) {
+        this.instanceSize = instanceSize;
         this.startDate = new Date();
         this.endDate = new Date();
         this.accelerometerAccuracy = 0;
@@ -67,6 +68,8 @@ public class ActivityReading implements ICsvData {
     //#endregion
 
     //#region Properties
+
+    public boolean isFullFilled() { return accelerometerX.size() == instanceSize; }
 
     public Date getStartDate() { return startDate; }
     public void setStartDate(Date startDate) { this.startDate = startDate; }

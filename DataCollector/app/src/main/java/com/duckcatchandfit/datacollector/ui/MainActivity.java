@@ -1,28 +1,26 @@
 package com.duckcatchandfit.datacollector.ui;
 
+import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
+import android.widget.RadioGroup;
 import android.widget.Toast;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
-import com.duckcatchandfit.datacollector.services.ICollectListener;
-import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.BuildConfig;
-import com.duckcatchandfit.datacollector.services.DataCollector;
 import com.duckcatchandfit.datacollector.R;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
+import com.duckcatchandfit.datacollector.services.DataCollector;
+import com.duckcatchandfit.datacollector.services.ICollectListener;
 import com.duckcatchandfit.datacollector.storage.CsvStorage;
 import com.duckcatchandfit.datacollector.storage.FileServer;
+import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.utils.Device;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ICollectListener {
 
     //#region Fields
 
@@ -46,10 +44,6 @@ public class MainActivity extends AppCompatActivity {
         fileServer.setUsername(BuildConfig.SFTP_USR);
         fileServer.setPassword(BuildConfig.SFTP_PWD);
         fileServer.setRemoteDirectory(BuildConfig.SFTP_DIR);
-
-        showMessage(getString(R.string.press_start_message));
-
-        //debugSensorReadings(Sensor.TYPE_ACCELEROMETER);
     }
 
     @Override
@@ -57,6 +51,7 @@ public class MainActivity extends AppCompatActivity {
         super.onResume();
 
         dataCollector.startListeningSensors(this);
+        dataCollector.setCollectListener(this);
 
         if (csvExporter.requestPermissions(this)) {
             Toast.makeText(this, getString(R.string.ready), Toast.LENGTH_SHORT).show();
@@ -69,6 +64,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         dataCollector.stopListeningSensors(this);
+        dataCollector.setCollectListener(null);
 
         super.onPause();
     }
@@ -76,19 +72,12 @@ public class MainActivity extends AppCompatActivity {
     //#region Listeners
 
     public void onStartClick(View v) {
-        setActivityRecording(!isRecording);
-
-        if (isRecording){
-            dataCollector.startReadingInstance();
-
-            showMessage(getString(R.string.press_stop_message));
+        if (!isRecording){
+            setActivityRecording(true);
+            dataCollector.startReadingInstance(getCollectMode());
         }
         else {
             dataCollector.stopReadingInstance();
-
-            reportMovement();
-
-            showMessage(getString(R.string.press_start_message));
         }
     }
 
@@ -109,64 +98,17 @@ public class MainActivity extends AppCompatActivity {
 
     //#region Private Methods
 
-    private void reportMovement() {
-        String[] activities = new String[] {
-            ActivityReading.JUMP_LEFT,
-            ActivityReading.JUMP_RIGHT,
-            ActivityReading.STAY,
-            ActivityReading.FAKE_JUMP_LEFT,
-            ActivityReading.FAKE_JUMP_RIGHT,
-            ActivityReading.OTHER
-        };
-
-        final ActivityReading reading = dataCollector.getReading();
-        reading.setDeviceId(deviceId);
-
-        new AlertDialog.Builder(this)
-            .setTitle(R.string.report_movement_message)
-            .setCancelable(false)
-            .setItems(activities, (dialog, selectedIndex) -> {
-                dialog.dismiss();
-
-                reading.setActivity(activities[selectedIndex]);
-
-                if (!csvExporter.hasHeader()) {
-                    csvExporter.writeHeader(this, reading);
-                }
-
-                csvExporter.writeToFile(this, reading);
-            })
-            .show();
-    }
-
-    private void showMessage(String message) {
-        TextView textView = findViewById(R.id.textView);
-        textView.setText(message);
-    }
-
     private void setActivityRecording(boolean recording) {
         isRecording = recording;
 
-        int startVisibility = isRecording
-                ? View.INVISIBLE
-                : View.VISIBLE;
+        RadioGroup radioGroup = findViewById(R.id.radioGroup);
+        radioGroup.setEnabled(!isRecording);
 
         Button startButton = findViewById(R.id.buttonStart);
         startButton.setText(isRecording ? R.string.stop : R.string.start);
 
-        findViewById(R.id.buttonStart).setVisibility(View.VISIBLE);
-        findViewById(R.id.buttonStartUpload).setVisibility(startVisibility);
-    }
-
-    private void debugSensorReadings(int debugSensorType) {
-        dataCollector.setCollectListener(new ICollectListener() {
-            @Override
-            public void onChange(int sensorType, float[] data) {
-                if (sensorType == debugSensorType) {
-                    Toast.makeText(MainActivity.this, Arrays.toString(data), Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
+        Button uploadButton = findViewById(R.id.buttonStartUpload);
+        uploadButton.setEnabled(!isRecording);
     }
 
     private static String getExportFileName() {
@@ -174,6 +116,64 @@ public class MainActivity extends AppCompatActivity {
 
         return dateFormat.format(new Date()) + "-" + Device.getDeviceId() + ".csv";
     }
+
+    private int getCollectMode() {
+        String activityLabel  =getActivityLabel();
+
+        if (activityLabel.equals(ActivityReading.STAYING)) {
+            return DataCollector.COLLECT_MODE_FILL_INSTANCE_LOOP;
+        }
+        else {
+            return DataCollector.COLLECT_MODE_FILL_INSTANCE;
+        }
+    }
+
+    private String getActivityLabel() {
+        RadioGroup radioGroup = findViewById(R.id.radioGroup);
+        int checkedId = radioGroup.getCheckedRadioButtonId();
+
+        if (checkedId == R.id.radioButtonStaying) {
+            return ActivityReading.STAYING;
+        }
+        else if (checkedId == R.id.radioButtonJumpLeft) {
+            return ActivityReading.JUMP_LEFT;
+        }
+        else if (checkedId == R.id.radioButtonJumpRight) {
+            return ActivityReading.JUMP_RIGHT;
+        }
+        else if (checkedId == R.id.radioButtonOther) {
+            return ActivityReading.OTHER;
+        }
+        else if (checkedId == R.id.radioButtonFakeJumpLeft) {
+            return ActivityReading.FAKE_JUMP_LEFT;
+        }
+        else if (checkedId == R.id.radioButtonFakeJumpRight) {
+            return ActivityReading.FAKE_JUMP_RIGHT;
+        }
+
+        return "ERROR";
+    }
+
+    //#region ICollectListener
+
+    @Override
+    public void onCollectStop() {
+        setActivityRecording(false);
+    }
+
+    @Override
+    public void onInstanceCollected(final ActivityReading reading) {
+        reading.setDeviceId(deviceId);
+        reading.setActivity(getActivityLabel());
+
+        if (!csvExporter.hasHeader()) {
+            csvExporter.writeHeader(this, reading);
+        }
+
+        csvExporter.writeToFile(this, reading);
+    }
+
+    //#endregion
 
     //#endregion
 
