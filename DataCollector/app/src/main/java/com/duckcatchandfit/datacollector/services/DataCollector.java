@@ -24,15 +24,16 @@ public class DataCollector implements SensorEventListener {
 
     //#region Constants
 
-    public static final int COLLECT_MODE_FILL_INSTANCE = 1;
-    public static final int COLLECT_MODE_FILL_INSTANCE_LOOP = 2;
+    public static final int COLLECT_MODE_SINGLE_INSTANCE = 1;
+    public static final int COLLECT_MODE_INSTANCE_LOOP = 2;
+
+    private static final int INSTANCE_SIZE = 64;
+    private static final int INSTANCE_OVERLAP_SIZE = 32;
+    private static final int COLLECT_INTERVAL = 20; // milliseconds
 
     //#endregion
 
     //#region Fields
-
-    private static final int INSTANCE_SIZE = 64;
-    private static final int COLLECT_INTERVAL = 20; // milliseconds
 
     private SensorManager sensorManager;
     private ActivityReading reading;
@@ -47,6 +48,7 @@ public class DataCollector implements SensorEventListener {
     private ICollectListener collectListener = null;
     private final ApplicationExecutors exec = new ApplicationExecutors();
     private Timer timer;
+    private int collectMode;
     private boolean isCollecting;
 
     //#endregion
@@ -54,14 +56,6 @@ public class DataCollector implements SensorEventListener {
     //#region Properties
 
     public void setCollectListener(ICollectListener collectListener) { this.collectListener = collectListener; }
-
-    //#endregion
-
-    //#region Initializers
-
-    public DataCollector() {
-        this.reading = new ActivityReading(INSTANCE_SIZE);
-    }
 
     //#endregion
 
@@ -88,10 +82,10 @@ public class DataCollector implements SensorEventListener {
     }
 
     public void startReadingInstance(final int collectMode) {
-        isCollecting = true;
+        this.isCollecting = true;
+        this.collectMode = collectMode;
 
-        reading = new ActivityReading(INSTANCE_SIZE);
-        reading.setStartDate(new Date());
+        startNewInstance();
 
         timer = new Timer();
         timer.schedule(new TimerTask() {
@@ -106,7 +100,7 @@ public class DataCollector implements SensorEventListener {
                         reading.setEndDate(new Date());
                         collectListener.onInstanceCollected(reading);
 
-                        if (collectMode == COLLECT_MODE_FILL_INSTANCE) {
+                        if (collectMode == COLLECT_MODE_SINGLE_INSTANCE) {
                             isCollecting = false;
                         }
 
@@ -121,8 +115,7 @@ public class DataCollector implements SensorEventListener {
                             return;
                         }
 
-                        reading = new ActivityReading(INSTANCE_SIZE);
-                        reading.setStartDate(new Date());
+                        startNewInstance();
                     }
                 });
             }
@@ -192,6 +185,18 @@ public class DataCollector implements SensorEventListener {
         }
 
         sensorManager.unregisterListener(this, sensor);
+    }
+
+    private void startNewInstance() {
+        ActivityReading newReading = new ActivityReading(INSTANCE_SIZE);
+
+        if (reading != null && collectMode == COLLECT_MODE_INSTANCE_LOOP) {
+            final int toIndex = INSTANCE_SIZE - 1;
+            reading.copyListsTo(newReading, toIndex - INSTANCE_OVERLAP_SIZE, toIndex);
+        }
+
+        reading = newReading;
+        reading.setStartDate(new Date());
     }
 
     private void copyDataToInstance() {

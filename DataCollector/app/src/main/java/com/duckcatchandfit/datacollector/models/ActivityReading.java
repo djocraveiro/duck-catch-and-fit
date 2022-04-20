@@ -21,7 +21,7 @@ public class ActivityReading implements ICsvData {
 
     //#region Fields
 
-    private int instanceSize;
+    private final int instanceSize;
     private Date startDate;
     private Date endDate;
     private int accelerometerAccuracy;
@@ -113,6 +113,20 @@ public class ActivityReading implements ICsvData {
     //#endregion
 
     //#region Public Methods
+
+    public void copyListsTo(ActivityReading reading, int fromIndex, int toIndex) {
+        reading.accelerometerX.addAll(this.accelerometerX.subList(fromIndex, toIndex));
+        reading.accelerometerY.addAll(this.accelerometerY.subList(fromIndex, toIndex));
+        reading.accelerometerZ.addAll(this.accelerometerZ.subList(fromIndex, toIndex));
+
+        reading.gyroscopeX.addAll(this.gyroscopeX.subList(fromIndex, toIndex));
+        reading.gyroscopeY.addAll(this.gyroscopeY.subList(fromIndex, toIndex));
+        reading.gyroscopeZ.addAll(this.gyroscopeZ.subList(fromIndex, toIndex));
+
+        reading.orientationAngleX.addAll(this.orientationAngleX.subList(fromIndex, toIndex));
+        reading.orientationAngleY.addAll(this.orientationAngleY.subList(fromIndex, toIndex));
+        reading.orientationAngleZ.addAll(this.orientationAngleZ.subList(fromIndex, toIndex));
+    }
 
     @Override
     public String toCsvHeader(String colSeparator) {

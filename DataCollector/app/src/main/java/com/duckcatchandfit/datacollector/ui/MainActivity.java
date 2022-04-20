@@ -118,13 +118,13 @@ public class MainActivity extends AppCompatActivity implements ICollectListener 
     }
 
     private int getCollectMode() {
-        String activityLabel  =getActivityLabel();
+        String activityLabel = getActivityLabel();
 
         if (activityLabel.equals(ActivityReading.STAYING)) {
-            return DataCollector.COLLECT_MODE_FILL_INSTANCE_LOOP;
+            return DataCollector.COLLECT_MODE_INSTANCE_LOOP;
         }
         else {
-            return DataCollector.COLLECT_MODE_FILL_INSTANCE;
+            return DataCollector.COLLECT_MODE_SINGLE_INSTANCE;
         }
     }
 
