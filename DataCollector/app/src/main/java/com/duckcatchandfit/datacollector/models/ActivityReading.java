@@ -2,6 +2,7 @@ package com.duckcatchandfit.datacollector.models;
 
 import android.annotation.SuppressLint;
 import com.duckcatchandfit.datacollector.storage.ICsvData;
+import com.duckcatchandfit.datacollector.utils.DateTime;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -39,7 +40,8 @@ public class ActivityReading implements ICsvData {
     private String activity;
     private String deviceId;
 
-    private final FeatureStats stats = new FeatureStats();
+    private final static FeatureStats stats = new FeatureStats();
+    private final static SimpleDateFormat dateFormat = DateTime.getISO8601DateFormat();
 
     //#endregion
 
@@ -148,10 +150,6 @@ public class ActivityReading implements ICsvData {
     @Override
     public String toCsvRow(String colSeparator) {
         StringBuilder builder = new StringBuilder();
-
-        @SuppressLint("SimpleDateFormat")
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         builder.append(dateFormat.format(startDate)).append(colSeparator)
             .append(dateFormat.format(endDate)).append(colSeparator);

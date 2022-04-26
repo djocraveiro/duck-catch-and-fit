@@ -6,59 +6,26 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".ui.MainActivity">
+
     <Button
-            android:text="@string/start"
+            android:text="@string/test_mode"
             android:layout_width="0dp"
-            android:layout_height="wrap_content" android:id="@+id/buttonStart"
+            android:layout_height="wrap_content" android:id="@+id/buttonTestMode"
             android:padding="24dp" android:layout_margin="16dp"
-            android:visibility="visible" android:onClick="onStartClick"
+            android:visibility="visible" android:onClick="onTestModeClick"
             android:minHeight="54dp"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginEnd="319dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/radioGroup"
-            android:layout_marginBottom="176dp" app:layout_constraintBottom_toTopOf="@+id/buttonStartUpload"/>
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="298dp" app:layout_constraintEnd_toEndOf="parent"
+            android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@+id/buttonCollectMode"/>
     <Button
-            android:text="@string/upload_data"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" android:id="@+id/buttonStartUpload"
-            android:padding="16dp" android:layout_margin="16dp"
-            android:visibility="visible" android:onClick="onUploadClick"
-            app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginBottom="16dp"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="293dp"
-            android:layout_marginEnd="292dp" app:layout_constraintEnd_toEndOf="parent"
-    />
-    <RadioGroup
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent"
-            android:id="@+id/radioGroup" android:layout_marginStart="48dp" android:layout_marginEnd="48dp"
-            android:layout_marginBottom="16dp" app:layout_constraintBottom_toTopOf="@+id/buttonStart"
-            app:layout_constraintTop_toTopOf="parent" android:layout_marginTop="16dp" android:paddingStart="24dp"
-            android:paddingEnd="24dp">
-        <RadioButton
-                android:text="@string/staying"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/radioButtonStaying" android:checked="true"/>
-        <RadioButton
-                android:text="@string/jump_left"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/radioButtonJumpLeft"/>
-        <RadioButton
-                android:text="@string/jump_right"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/radioButtonJumpRight"/>
-        <RadioButton
-                android:text="@string/other"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/radioButtonOther"/>
-        <RadioButton
-                android:text="@string/fake_jump_left"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/radioButtonFakeJumpLeft"/>
-        <RadioButton
-                android:text="@string/fake_jump_right"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content" android:id="@+id/radioButtonFakeJumpRight"/>
-    </RadioGroup>
+            android:text="@string/collect_mode"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content" android:id="@+id/buttonCollectMode"
+            android:padding="24dp" android:layout_margin="16dp"
+            android:visibility="visible" android:onClick="onCollectModeClick"
+            android:minHeight="54dp"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginEnd="298dp" app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
 </androidx.constraintlayout.widget.ConstraintLayout>

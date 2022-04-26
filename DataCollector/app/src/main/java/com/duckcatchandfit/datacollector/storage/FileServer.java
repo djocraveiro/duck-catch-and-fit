@@ -64,8 +64,8 @@ public class FileServer {
     private Session createSession() throws JSchException {
         JSch ssh = new JSch();
 
-        /* Remember that this is just for testing and we need a quick access,
-         * you can add an identity and known_hosts file to prevent Man In the Middle attacks */
+        /* Remember that this is just for testing, and we need quick access.
+         * You can add an identity and known_hosts file to prevent Man In the Middle attacks */
         java.util.Properties config = new java.util.Properties();
         config.put("StrictHostKeyChecking", "no");
 
