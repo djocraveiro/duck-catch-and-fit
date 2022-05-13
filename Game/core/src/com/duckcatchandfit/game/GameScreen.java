@@ -5,20 +5,28 @@ import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.duckcatchandfit.game.obstacles.IObstacle;
+import com.duckcatchandfit.game.obstacles.Obstacle;
+import com.duckcatchandfit.game.obstacles.ObstacleEngine;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class GameScreen implements Screen {
 
     //#region Fields
 
     // Screen
-    private Camera camera;
-    private Viewport viewport;
+    private final Camera camera;
+    private final Viewport viewport;
 
     // Graphics
-    private SpriteBatch batch;
-    private Texture background;
+    private final SpriteBatch batch;
+    private final Texture background;
 
     // Timing
     private float backgroundOffset;
@@ -28,17 +36,25 @@ public class GameScreen implements Screen {
     private final int WORLD_WIDTH = 72;
     private final int WORLD_HEIGHT = 128;
 
+    // Game objects
+    private final ObstacleEngine obstacleEngine;
+
     //#endregion
 
     //#region Initializers
 
-    GameScreen() {
+    public GameScreen() {
         camera = new OrthographicCamera();
-        viewport = new StretchViewport(WORLD_WIDTH, WORLD_WIDTH, camera);
+        viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
 
         background = new Texture("grass.png");
         backgroundOffset = 0.0f;
-        backgroundScrollingSpeed = (float)WORLD_HEIGHT / 8;
+        backgroundScrollingSpeed = (float)viewport.getWorldHeight() / 8.0f;
+
+        Rectangle worldBoundingBox = new Rectangle(
+                viewport.getScreenX(), viewport.getScreenY(), WORLD_WIDTH, WORLD_HEIGHT);
+
+        obstacleEngine = new ObstacleEngine(worldBoundingBox, 2f);
 
         batch = new SpriteBatch();
     }
@@ -52,6 +68,9 @@ public class GameScreen implements Screen {
         batch.begin();
 
         renderBackground(deltaTime);
+
+        obstacleEngine.addObstacles(deltaTime);
+        obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
 
         batch.end();
     }
