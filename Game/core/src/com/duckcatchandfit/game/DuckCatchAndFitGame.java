@@ -2,7 +2,7 @@ package com.duckcatchandfit.game;
 
 import com.badlogic.gdx.Game;
 
-public class GameEngine extends Game {
+public class DuckCatchAndFitGame extends Game {
 
 	//#region Fields
 

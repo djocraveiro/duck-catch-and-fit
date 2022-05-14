@@ -1,5 +1,7 @@
 package com.duckcatchandfit.game;
 
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -8,13 +10,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.duckcatchandfit.game.obstacles.IObstacle;
-import com.duckcatchandfit.game.obstacles.Obstacle;
+import com.duckcatchandfit.game.players.PlayerEngine;
 import com.duckcatchandfit.game.obstacles.ObstacleEngine;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.ListIterator;
 
 public class GameScreen implements Screen {
 
@@ -38,6 +35,7 @@ public class GameScreen implements Screen {
 
     // Game objects
     private final ObstacleEngine obstacleEngine;
+    private final PlayerEngine playerEngine;
 
     //#endregion
 
@@ -54,9 +52,13 @@ public class GameScreen implements Screen {
                 viewport.getScreenX(), viewport.getScreenY(), WORLD_WIDTH, WORLD_HEIGHT);
 
         WorldMatrix worldMatrix = new WorldMatrix(16, 16, worldBoundingBox);
-        obstacleEngine = new ObstacleEngine(worldMatrix, 2f,
+
+        obstacleEngine = new ObstacleEngine(worldMatrix, 2.2f,
                 new Texture("tree.png"),
                 new Texture("rock.png"));
+
+        playerEngine = new PlayerEngine(worldMatrix,
+                new Texture("character.png"));
 
         batch = new SpriteBatch();
     }
@@ -71,8 +73,12 @@ public class GameScreen implements Screen {
 
         renderBackground(deltaTime);
 
+        detectInput(deltaTime);
+
         obstacleEngine.addObstacles(deltaTime);
         obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
+
+        playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
 
         batch.end();
     }
@@ -105,7 +111,9 @@ public class GameScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        batch.dispose();
+        obstacleEngine.dispose();
+        playerEngine.dispose();
     }
 
     //#endregion
@@ -126,6 +134,15 @@ public class GameScreen implements Screen {
         batch.draw(background,
                 0, -backgroundOffset + WORLD_HEIGHT,
                 WORLD_WIDTH, WORLD_HEIGHT);
+    }
+
+    private void detectInput(float deltaTime) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
+            playerEngine.movePlayerLeft();
+        }
+        else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
+            playerEngine.movePlayerRight();
+        }
     }
 
     //#endregion

@@ -22,6 +22,10 @@ public class WorldMatrix {
 
     public Rectangle getWorldBoundingBox() { return worldBoundingBox; }
 
+    public float getCellWidth() { return cellWidth; }
+
+    public float getCellHeight() { return cellHeight; }
+
     public int getRowCount() { return rowCount; }
 
     public int getColumCount() { return colCount; }
@@ -35,7 +39,7 @@ public class WorldMatrix {
         this.cellHeight = cellHeight;
         this.worldBoundingBox = new Rectangle(worldBoundingBox);
 
-        rowCount = (int)Math.floor(this.worldBoundingBox.height / this.cellHeight);
+        rowCount = (int)Math.floor(this.worldBoundingBox.height / this.cellHeight) + 1;
         colCount = (int)Math.floor(this.worldBoundingBox.width / this.cellWidth);
 
         float remainWidth = this.worldBoundingBox.width % this.cellWidth;
@@ -78,6 +82,7 @@ public class WorldMatrix {
                 cellX += cellWidth;
             }
 
+            cellX = xOffset;
             cellY -= cellHeight;
         }
 

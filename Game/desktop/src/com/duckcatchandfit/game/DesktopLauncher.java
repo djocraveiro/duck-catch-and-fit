@@ -2,7 +2,6 @@ package com.duckcatchandfit.game;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.duckcatchandfit.game.GameEngine;
 
 // Please note that on macOS your application needs to be started with the -XstartOnFirstThread JVM argument
 public class DesktopLauncher {
@@ -15,7 +14,7 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.setTitle("Duck Catch and Fit");
 
-		new Lwjgl3Application(new GameEngine(), config);
+		new Lwjgl3Application(new DuckCatchAndFitGame(), config);
 	}
 
 	//#endregion

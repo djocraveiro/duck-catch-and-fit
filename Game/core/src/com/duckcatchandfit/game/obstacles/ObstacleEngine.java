@@ -82,6 +82,12 @@ public class ObstacleEngine {
         }
     }
 
+    public void dispose() {
+        treeTexture.dispose();
+        rockTexture.dispose();
+        obstacles.clear();
+    }
+
     //#endregion
 
     //#region Private Methods
