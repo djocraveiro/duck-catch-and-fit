@@ -236,6 +236,8 @@ public class DataCollector implements SensorEventListener {
 
         // Update acceleration X, Y and Z
         for(int axis = 0; axis < 3; axis++) {
+
+            // high-pass filter
             if (Math.abs(linearAcceleration[axis] - acceleration[axis]) > NOISE) {
                 acceleration[axis] = linearAcceleration[axis];
             }
@@ -297,6 +299,8 @@ public class DataCollector implements SensorEventListener {
         // Update rotation X, Y and Z
         for(int axis = 0; axis < 3; axis++) {
             float newRotation = rotationCurrent[axis] * deltaRotationMatrix[axis];
+
+            // high-pass filter
             if (Math.abs(newRotation - rotationCurrent[axis]) > NOISE) {
                 rotationCurrent[axis] = newRotation;
             }
