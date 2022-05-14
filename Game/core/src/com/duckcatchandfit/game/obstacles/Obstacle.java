@@ -18,12 +18,13 @@ public class Obstacle implements IObstacle {
 
     //#region Initializers
 
-    public Obstacle(float xCentre, float yCentre, float width, float height, Texture treeTexture) {
-        this.boundingBox = new Rectangle(
-                xCentre - width / 2,
-                yCentre - height / 2,
-                width, height);
+    public Obstacle(float x, float y, float width, float height, Texture treeTexture) {
+        this.boundingBox = new Rectangle(x, y, width, height);
+        this.treeTexture = treeTexture;
+    }
 
+    public Obstacle(Rectangle boundingBox, Texture treeTexture) {
+        this.boundingBox = new Rectangle(boundingBox);
         this.treeTexture = treeTexture;
     }
 

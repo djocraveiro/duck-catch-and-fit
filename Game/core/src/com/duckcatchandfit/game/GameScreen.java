@@ -29,7 +29,7 @@ public class GameScreen implements Screen {
     private final Texture background;
 
     // Timing
-    private float backgroundOffset;
+    private float backgroundOffset = 0.0f;
     private final float backgroundScrollingSpeed;
 
     // World parameters
@@ -48,13 +48,15 @@ public class GameScreen implements Screen {
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
 
         background = new Texture("grass.png");
-        backgroundOffset = 0.0f;
-        backgroundScrollingSpeed = (float)viewport.getWorldHeight() / 8.0f;
+        backgroundScrollingSpeed = viewport.getWorldHeight() / 8.0f;
 
         Rectangle worldBoundingBox = new Rectangle(
                 viewport.getScreenX(), viewport.getScreenY(), WORLD_WIDTH, WORLD_HEIGHT);
 
-        obstacleEngine = new ObstacleEngine(worldBoundingBox, 2f);
+        WorldMatrix worldMatrix = new WorldMatrix(16, 16, worldBoundingBox);
+        obstacleEngine = new ObstacleEngine(worldMatrix, 2f,
+                new Texture("tree.png"),
+                new Texture("rock.png"));
 
         batch = new SpriteBatch();
     }
