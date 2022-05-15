@@ -1,8 +1,8 @@
 package com.duckcatchandfit.game.screens;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -16,7 +16,9 @@ public class GameOverScreen extends ScreenAdapter {
     // Navigation
     private final IGameNavigation gameNavigation;
 
+    // Scores
     private final int score;
+    private final int highScore;
 
     // Graphics
     private final SpriteBatch batch;
@@ -31,6 +33,9 @@ public class GameOverScreen extends ScreenAdapter {
         this.score = score;
         batch = new SpriteBatch();
         font = new BitmapFont();
+
+        Preferences pref = Gdx.app.getPreferences("duck-catch-and-fit");
+        this.highScore = pref.getInteger("high-score", 0);
     }
 
     //#endregion
@@ -51,6 +56,9 @@ public class GameOverScreen extends ScreenAdapter {
 
         font.draw(batch, "Score: " + score,
                 xPos, Gdx.graphics.getHeight() * 0.5f);
+
+        font.draw(batch, "high Score: " + highScore,
+                xPos, Gdx.graphics.getHeight() * 0.45f);
 
         font.draw(batch, "Tap to restart.",
                 xPos, Gdx.graphics.getHeight() * 0.25f);

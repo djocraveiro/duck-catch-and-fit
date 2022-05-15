@@ -20,7 +20,7 @@ public class ObstacleEngine {
 
     // Timing
     private final float timeBetweenNewObstacles;
-    private float obstacleTimer = 0;
+    private float obstacleTimer;
 
     // Graphics
     private final Texture treeTexture;
@@ -40,6 +40,7 @@ public class ObstacleEngine {
               Texture rockTexture) {
         this.worldMatrix = worldMatrix;
         this.timeBetweenNewObstacles = timeBetweenNewObstacles;
+        this.obstacleTimer = timeBetweenNewObstacles;
         this.treeTexture = treeTexture;
         this.rockTexture = rockTexture;
 
@@ -67,8 +68,9 @@ public class ObstacleEngine {
         }
     }
 
-    public void renderObstacles(float deltaTime, float scrollingSpeed, SpriteBatch batch) {
+    public int renderObstacles(float deltaTime, float scrollingSpeed, SpriteBatch batch) {
         ListIterator<IObstacle> iterator = obstacles.listIterator();
+        int removedCount = 0;
 
         while (iterator.hasNext()) {
             IObstacle obstacle = iterator.next();
@@ -79,8 +81,11 @@ public class ObstacleEngine {
 
             if (obstacle.isOutside(worldMatrix.getWorldBoundingBox())) {
                 iterator.remove();
+                removedCount++;
             }
         }
+
+        return removedCount;
     }
 
     public boolean detectCollisions(IPlayer player) {

@@ -2,18 +2,25 @@ package com.duckcatchandfit.game.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.duckcatchandfit.game.IGameNavigation;
 import com.duckcatchandfit.game.WorldMatrix;
 import com.duckcatchandfit.game.players.PlayerEngine;
 import com.duckcatchandfit.game.obstacles.ObstacleEngine;
+
+import java.util.Locale;
 
 public class GameScreen implements Screen {
 
@@ -29,6 +36,7 @@ public class GameScreen implements Screen {
     // Graphics
     private final SpriteBatch batch;
     private final Texture background;
+    private final HeadsUpDisplay headsUpDisplay;
 
     // Timing
     private float backgroundOffset = 0.0f;
@@ -41,6 +49,7 @@ public class GameScreen implements Screen {
     // Game objects
     private final ObstacleEngine obstacleEngine;
     private final PlayerEngine playerEngine;
+    private int score = 0;
 
     //#endregion
 
@@ -53,7 +62,7 @@ public class GameScreen implements Screen {
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
 
         background = new Texture("grass.png");
-        backgroundScrollingSpeed = viewport.getWorldHeight() / 8.0f;
+        backgroundScrollingSpeed = viewport.getWorldHeight() / 6.0f;
 
         Rectangle worldBoundingBox = new Rectangle(
                 viewport.getScreenX(), viewport.getScreenY(), WORLD_WIDTH, WORLD_HEIGHT);
@@ -68,6 +77,8 @@ public class GameScreen implements Screen {
                 new Texture("character.png"));
 
         batch = new SpriteBatch();
+
+        headsUpDisplay = new HeadsUpDisplay(viewport.getWorldWidth(), viewport.getWorldHeight());
     }
 
     //#endregion
@@ -80,21 +91,23 @@ public class GameScreen implements Screen {
 
         renderBackground(deltaTime);
 
-        detectInput(deltaTime);
-
         playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
 
-        obstacleEngine.addObstacles(deltaTime);
-        obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
-
         boolean endGame = obstacleEngine.detectCollisions(playerEngine.getPlayer());
+        if (endGame) {
+            batch.end();
+            dispose();
+
+            gameNavigation.ShowGameOverScreen(score);
+        }
+
+        obstacleEngine.addObstacles(deltaTime);
+        int skippedObstacles = obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
+        score += skippedObstacles;
+
+        headsUpDisplay.renderHeadsUpDisplay(score, batch);
 
         batch.end();
-
-        if (endGame) {
-            dispose();
-            gameNavigation.ShowGameOverScreen(0); //TODO
-        }
     }
 
     @Override
@@ -115,17 +128,44 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
-
+        Gdx.input.setInputProcessor(null);
     }
 
     @Override
     public void show() {
+        Gdx.input.setInputProcessor(new InputAdapter() {
+            @Override
+            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+                final float screenXCenter = viewport.getScreenWidth() / 2.0f;
 
+                if (screenX < screenXCenter) {
+                    playerEngine.movePlayerLeft();
+                }
+                else {
+                    playerEngine.movePlayerRight();
+                }
+
+                return true;
+            }
+
+            @Override
+            public boolean keyDown(int keycode) {
+                if (keycode == Input.Keys.LEFT) {
+                    playerEngine.movePlayerLeft();
+                }
+                else if (keycode == Input.Keys.RIGHT) {
+                    playerEngine.movePlayerRight();
+                }
+
+                return true;
+            }
+        });
     }
 
     @Override
     public void dispose() {
         batch.dispose();
+        headsUpDisplay.dispose();
         obstacleEngine.dispose();
         playerEngine.dispose();
     }
@@ -148,15 +188,6 @@ public class GameScreen implements Screen {
         batch.draw(background,
                 0, -backgroundOffset + WORLD_HEIGHT,
                 WORLD_WIDTH, WORLD_HEIGHT);
-    }
-
-    private void detectInput(float deltaTime) {
-        if (Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) {
-            playerEngine.movePlayerLeft();
-        }
-        else if (Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) {
-            playerEngine.movePlayerRight();
-        }
     }
 
     //#endregion
