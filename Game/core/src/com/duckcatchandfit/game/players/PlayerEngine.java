@@ -14,10 +14,16 @@ public class PlayerEngine {
 
     // Game objects
     private final IPlayer player;
-    private int playerLastRowIndex, playerLastColIndex;
+    private int playerLastColIndex;
 
     //Graphics
     private final Texture playerTexture;
+
+    //#endregion
+
+    //#region Properties
+
+    public IPlayer getPlayer() { return player; }
 
     //#endregion
 
@@ -25,10 +31,11 @@ public class PlayerEngine {
 
     public PlayerEngine(WorldMatrix worldMatrix, Texture playerTexture) {
         this.worldMatrix = worldMatrix;
-        this.playerLastRowIndex = worldMatrix.getRowCount() - 1;
         this.playerLastColIndex = 1;
 
-        Rectangle playerBoundingBox = worldMatrix.getCellBoundingBox(playerLastRowIndex, playerLastColIndex);
+        final int bottomRow = worldMatrix.getRowCount() - 1;
+        Rectangle playerBoundingBox = worldMatrix.getCellBoundingBox(bottomRow, playerLastColIndex);
+
         this.playerTexture = playerTexture;
         this.player = new Player(playerBoundingBox, playerTexture);
     }

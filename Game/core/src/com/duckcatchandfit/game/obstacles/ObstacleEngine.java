@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.duckcatchandfit.game.WorldMatrix;
+import com.duckcatchandfit.game.players.IPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -80,6 +81,16 @@ public class ObstacleEngine {
                 iterator.remove();
             }
         }
+    }
+
+    public boolean detectCollisions(IPlayer player) {
+        for (IObstacle obstacle : obstacles) {
+            if (player.intersects(obstacle)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public void dispose() {

@@ -1,4 +1,4 @@
-package com.duckcatchandfit.game;
+package com.duckcatchandfit.game.screens;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
@@ -10,12 +10,17 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.duckcatchandfit.game.IGameNavigation;
+import com.duckcatchandfit.game.WorldMatrix;
 import com.duckcatchandfit.game.players.PlayerEngine;
 import com.duckcatchandfit.game.obstacles.ObstacleEngine;
 
 public class GameScreen implements Screen {
 
     //#region Fields
+
+    // navigation
+    private final IGameNavigation gameNavigation;
 
     // Screen
     private final Camera camera;
@@ -41,7 +46,9 @@ public class GameScreen implements Screen {
 
     //#region Initializers
 
-    public GameScreen() {
+    public GameScreen(IGameNavigation gameNavigation) {
+        this.gameNavigation = gameNavigation;
+
         camera = new OrthographicCamera();
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
 
@@ -75,12 +82,19 @@ public class GameScreen implements Screen {
 
         detectInput(deltaTime);
 
+        playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
+
         obstacleEngine.addObstacles(deltaTime);
         obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
 
-        playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
+        boolean endGame = obstacleEngine.detectCollisions(playerEngine.getPlayer());
 
         batch.end();
+
+        if (endGame) {
+            dispose();
+            gameNavigation.ShowGameOverScreen(0); //TODO
+        }
     }
 
     @Override
