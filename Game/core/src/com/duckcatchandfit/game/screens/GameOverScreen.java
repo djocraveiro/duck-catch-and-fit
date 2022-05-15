@@ -18,7 +18,7 @@ public class GameOverScreen extends ScreenAdapter {
 
     // Scores
     private final int score;
-    private final int highScore;
+    private int highScore;
 
     // Graphics
     private final SpriteBatch batch;
@@ -34,8 +34,15 @@ public class GameOverScreen extends ScreenAdapter {
         batch = new SpriteBatch();
         font = new BitmapFont();
 
+        String HIGH_SCORE_KEY = "high-score";
         Preferences pref = Gdx.app.getPreferences("duck-catch-and-fit");
-        this.highScore = pref.getInteger("high-score", 0);
+        highScore = pref.getInteger(HIGH_SCORE_KEY, 0);
+
+        if (score > highScore) {
+            highScore = score;
+            pref.putInteger(HIGH_SCORE_KEY, highScore);
+            pref.flush();
+        }
     }
 
     //#endregion

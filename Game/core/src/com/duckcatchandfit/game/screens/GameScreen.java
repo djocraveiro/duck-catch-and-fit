@@ -99,6 +99,7 @@ public class GameScreen implements Screen {
             dispose();
 
             gameNavigation.ShowGameOverScreen(score);
+            return;
         }
 
         obstacleEngine.addObstacles(deltaTime);
