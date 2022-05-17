@@ -3,7 +3,6 @@ package com.duckcatchandfit.datacollector.models;
 import com.duckcatchandfit.datacollector.storage.ICsvData;
 import com.duckcatchandfit.datacollector.utils.MathHelper;
 
-import java.util.Collections;
 import java.util.List;
 
 public class FeatureStats implements ICsvData {
@@ -32,11 +31,11 @@ public class FeatureStats implements ICsvData {
     //#region Public Methods
 
     public FeatureStats calc(List<Float> values) {
-        min = Collections.min(values);
+        min = MathHelper.min(values);
         mean = MathHelper.mean(values);
-        max = Collections.max(values);
+        max = MathHelper.max(values);
         variance = MathHelper.variance(values, mean);
-        std = MathHelper.standardDeviation(values, variance);
+        std = MathHelper.stdDeviation(values, variance);
 
         return this;
     }

@@ -10,13 +10,18 @@ import com.duckcatchandfit.datacollector.BuildConfig;
 import com.duckcatchandfit.datacollector.R;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
 import com.duckcatchandfit.datacollector.services.DataCollector;
+import com.duckcatchandfit.datacollector.services.FeatureExtractor;
 import com.duckcatchandfit.datacollector.services.ICollectListener;
 import com.duckcatchandfit.datacollector.storage.CsvStorage;
 import com.duckcatchandfit.datacollector.storage.FileServer;
 import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.utils.DateTime;
 import com.duckcatchandfit.datacollector.utils.Device;
+import weka.classifiers.Classifier;
+import weka.core.Instance;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -34,6 +39,8 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     private boolean isRecording = false;
     private final ActivityReading[] readingBuffer = new ActivityReading[10];
 
+    private Classifier classifier;
+
     //#endregion
 
     //#region Public Methods
@@ -47,6 +54,8 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
         fileServer.setUsername(BuildConfig.SFTP_USR);
         fileServer.setPassword(BuildConfig.SFTP_PWD);
         fileServer.setRemoteDirectory(BuildConfig.SFTP_DIR);
+
+        classifier = loadModel();
     }
 
     @Override
@@ -174,8 +183,12 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
 
     @Override
     public void onInstanceCollected(final ActivityReading reading) {
+        final String activityLabel = predictClass(reading);
+        if (activityLabel.isEmpty()) {
+            return;
+        }
+
         reading.setDeviceId(deviceId);
-        //TODO: predict activity label
         reading.setActivity(getActivityLabel());
 
         exec.getMainThread().execute(() -> logActivityPrediction(reading));
@@ -188,6 +201,51 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     }
 
     //#endregion
+
+    //#endregion
+
+    //#region Private Methods
+
+    private Classifier loadModel() {
+        InputStream inputStream = null;
+        try {
+            // deserialize model
+            inputStream = getAssets().open("randomFores-test01.model");
+            return (Classifier) weka.core.SerializationHelper.read(inputStream);
+        }
+        catch (Exception e) {
+            Toast.makeText(this, getString(R.string.error_loading_model), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
+        finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                }
+                catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private String predictClass(final ActivityReading reading) {
+        final Instance unlabeledInstance = FeatureExtractor.toInstance(reading);
+
+        try {
+            double prediction = classifier.classifyInstance(unlabeledInstance);
+
+            return String.valueOf(prediction);
+        }
+        catch (Exception e) {
+            Toast.makeText(this, getString(R.string.prediction_error), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+
+            return "";
+        }
+    }
 
     //#endregion
 }
