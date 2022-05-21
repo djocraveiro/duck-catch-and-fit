@@ -17,6 +17,7 @@ import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.duckcatchandfit.game.IGameNavigation;
 import com.duckcatchandfit.game.WorldMatrix;
+import com.duckcatchandfit.game.duckcatch.DuckCatchEngine;
 import com.duckcatchandfit.game.players.PlayerEngine;
 import com.duckcatchandfit.game.obstacles.ObstacleEngine;
 
@@ -27,7 +28,7 @@ public class GameScreen implements Screen {
     //#region Fields
 
     // navigation
-    private final IGameNavigation gameNavigation;
+    private IGameNavigation gameNavigation;
 
     // Screen
     private final Camera camera;
@@ -49,6 +50,7 @@ public class GameScreen implements Screen {
     // Game objects
     private final ObstacleEngine obstacleEngine;
     private final PlayerEngine playerEngine;
+    private final DuckCatchEngine duckCatchEngine;
     private int score = 0;
 
     //#endregion
@@ -76,6 +78,8 @@ public class GameScreen implements Screen {
         playerEngine = new PlayerEngine(worldMatrix,
                 new Texture("character.png"));
 
+        duckCatchEngine = new DuckCatchEngine();
+
         batch = new SpriteBatch();
 
         headsUpDisplay = new HeadsUpDisplay(viewport.getWorldWidth(), viewport.getWorldHeight());
@@ -96,9 +100,8 @@ public class GameScreen implements Screen {
         boolean endGame = obstacleEngine.detectCollisions(playerEngine.getPlayer());
         if (endGame) {
             batch.end();
-            dispose();
-
             gameNavigation.ShowGameOverScreen(score);
+
             return;
         }
 
@@ -169,6 +172,9 @@ public class GameScreen implements Screen {
         headsUpDisplay.dispose();
         obstacleEngine.dispose();
         playerEngine.dispose();
+        duckCatchEngine.dispose();
+
+        gameNavigation = null;
     }
 
     //#endregion

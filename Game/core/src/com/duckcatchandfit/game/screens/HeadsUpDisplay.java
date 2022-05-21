@@ -30,6 +30,7 @@ public class HeadsUpDisplay {
         fontParameter.borderColor = new Color(0, 0, 0, 0.3f);
 
         font = fontGenerator.generateFont(fontParameter);
+        fontGenerator.dispose();
 
         //scale the font to fit world
         font.getData().setScale(0.1f);

@@ -42,12 +42,20 @@ public class DuckCatchAndFitGame extends Game implements IGameNavigation {
 
 	@Override
 	public void ShowGameScreen() {
+		if (screen != null) {
+			screen.dispose();
+		}
+
 		screen = new GameScreen(this);
 		setScreen(screen);
 	}
 
 	@Override
 	public void ShowGameOverScreen(int score) {
+		if (screen != null) {
+			screen.dispose();
+		}
+
 		screen = new GameOverScreen(this, score);
 		setScreen(screen);
 	}
