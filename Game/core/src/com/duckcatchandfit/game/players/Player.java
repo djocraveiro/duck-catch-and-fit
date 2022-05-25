@@ -69,7 +69,7 @@ public class Player implements IPlayer {
                 boundingBox.y + boundingBox.height * 0.9f,
                 1.0f, 4.0f);
 
-        ILaser laser = new Laser(laserBoundingBox, 45, laserTexture);
+        ILaser laser = new Laser(laserBoundingBox, 60, laserTexture);
 
         timeSinceLastShot = 0;
 

@@ -7,11 +7,11 @@ import com.duckcatchandfit.game.obstacles.IObstacle;
 
 public interface ILaser {
 
+    void update(float deltaTime);
+
     boolean intersects(IDuck duck);
 
     boolean intersects(IObstacle obstacle);
-
-    void update(float deltaTime);
 
     void draw(Batch batch);
 

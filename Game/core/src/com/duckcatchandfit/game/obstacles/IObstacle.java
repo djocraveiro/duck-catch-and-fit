@@ -5,9 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 
 public interface IObstacle {
 
-    void update(float deltaTime);
-
-    boolean intersects(Rectangle otherRectangle);
+    boolean intersects(Rectangle otherBoundingBox);
 
     void translate(float xChange, float yChange);
 

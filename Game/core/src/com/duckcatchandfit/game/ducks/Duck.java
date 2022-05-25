@@ -1,10 +1,10 @@
-package com.duckcatchandfit.game.obstacles;
+package com.duckcatchandfit.game.ducks;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Batch;
 import com.badlogic.gdx.math.Rectangle;
 
-public class Obstacle implements IObstacle {
+public class Duck implements IDuck {
 
     //#region Fields
 
@@ -12,15 +12,15 @@ public class Obstacle implements IObstacle {
     private final Rectangle boundingBox;
 
     // Graphics
-    private final Texture treeTexture;
+    private final Texture duckTexture;
 
     //#endregion
 
     //#region Initializers
 
-    public Obstacle(Rectangle boundingBox, Texture treeTexture) {
+    public Duck(Rectangle boundingBox, Texture duckTexture) {
         this.boundingBox = boundingBox;
-        this.treeTexture = treeTexture;
+        this.duckTexture = duckTexture;
     }
 
     //#endregion
@@ -35,12 +35,12 @@ public class Obstacle implements IObstacle {
     @Override
     public void translate(float xChange, float yChange) {
         boundingBox.setPosition(boundingBox.x + xChange,
-                                boundingBox.y + yChange);
+                boundingBox.y + yChange);
     }
 
     @Override
     public void draw(Batch batch) {
-        batch.draw(treeTexture,
+        batch.draw(duckTexture,
                 boundingBox.x, boundingBox.y,
                 boundingBox.width, boundingBox.height);
     }

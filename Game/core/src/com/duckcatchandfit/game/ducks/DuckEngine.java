@@ -2,11 +2,13 @@ package com.duckcatchandfit.game.ducks;
 
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Rectangle;
 import com.duckcatchandfit.game.WorldMatrix;
 import com.duckcatchandfit.game.obstacles.IObstacle;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Random;
 
 public class DuckEngine {
@@ -47,26 +49,54 @@ public class DuckEngine {
 
     //#region Public Methods
 
-    public void addDucks(float deltaTime, List<IObstacle> obstacles) {
+    public void addDucks(float deltaTime, Rectangle lockedBoundingBox) {
         duckTimer += deltaTime;
 
         if (duckTimer > timeBetweenNewDucks) {
+            final int duckColIndex = getDuckColIndex();
+            Rectangle boundingBox = worldMatrix.getCellBoundingBox(0, duckColIndex);
 
-            duckTimer -= timeBetweenNewDucks;
+            if (lockedBoundingBox == null || !lockedBoundingBox.overlaps(boundingBox)) {
+                Rectangle duckBoundingBox = new Rectangle(boundingBox);
+                ducks.add(new Duck(duckBoundingBox, duckTexture));
+
+                duckTimer -= timeBetweenNewDucks;
+            }
         }
     }
 
     public void renderDucks(float deltaTime, float scrollingSpeed, SpriteBatch batch) {
-        //TODO render the ducks
-    }
+        ListIterator<IDuck> iterator = ducks.listIterator();
 
-    public boolean detectDuckCatch() {
-        //TODO detect if shoots reach the ducks
-        return false;
+        final float yChange = deltaTime * -scrollingSpeed;
+
+        while (iterator.hasNext()) {
+            IDuck duck = iterator.next();
+
+            duck.translate(0, yChange);
+            duck.draw(batch);
+
+            if (duck.isOutside(worldMatrix.getWorldBoundingBox())) {
+                iterator.remove();
+            }
+        }
     }
 
     public void dispose() {
         duckTexture.dispose();
+        ducks.clear();
+    }
+
+    //#endregion
+
+    //#region Private Methods
+
+    private int getDuckColIndex() {
+        return getRandomNumber(0, worldMatrix.getColumCount() - 1);
+    }
+
+    public int getRandomNumber(int min, int max) {
+        return random.nextInt(max - min + 1) + min;
     }
 
     //#endregion

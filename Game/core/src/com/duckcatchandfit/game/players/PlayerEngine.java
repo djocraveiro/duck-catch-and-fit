@@ -101,6 +101,7 @@ public class PlayerEngine {
     public void dispose() {
         playerTexture.dispose();
         laserTexture.dispose();
+        lasers.clear();
     }
 
     //#endregion

@@ -37,6 +37,14 @@ public class ObstacleEngine {
 
     public List<IObstacle> getObstacles() { return obstacles; }
 
+    public Rectangle getLastObstacleBoundingBox() {
+        if (lastObstacleBoundingBox != null) {
+            return new Rectangle(lastObstacleBoundingBox);
+        }
+
+        return null;
+    }
+
     //#endregion
 
     //#region Initializers
@@ -68,21 +76,22 @@ public class ObstacleEngine {
                 obstacles.add(new Obstacle(obstacleBoundingBox, getObstacleTexture()));
 
                 lastObstacleBoundingBox = worldMatrix.getCellBoundingBox(1, lastObstacleColIndex);
-            }
 
-            obstacleTimer -= timeBetweenNewObstacles;
+                obstacleTimer -= timeBetweenNewObstacles;
+            }
         }
     }
 
     public int renderObstacles(float deltaTime, float scrollingSpeed, SpriteBatch batch) {
         ListIterator<IObstacle> iterator = obstacles.listIterator();
+
+        final float yChange = deltaTime * -scrollingSpeed;
         int removedCount = 0;
 
         while (iterator.hasNext()) {
             IObstacle obstacle = iterator.next();
 
-            obstacle.update(deltaTime);
-            obstacle.translate(0, deltaTime * -scrollingSpeed);
+            obstacle.translate(0, yChange);
             obstacle.draw(batch);
 
             if (obstacle.isOutside(worldMatrix.getWorldBoundingBox())) {

@@ -52,7 +52,7 @@ public class GameScreen implements Screen {
     // Game objects
     private final ObstacleEngine obstacleEngine;
     private final PlayerEngine playerEngine;
-    private final DuckEngine duckCatchEngine;
+    private final DuckEngine duckEngine;
     private int score = 0;
 
     //#endregion
@@ -81,7 +81,7 @@ public class GameScreen implements Screen {
                 new Texture("character.png"),
                 new Texture("laser.png"));
 
-        duckCatchEngine = new DuckEngine(worldMatrix, 10.0f,
+        duckEngine = new DuckEngine(worldMatrix, 10.0f,
                 new Texture("duck.png"));
 
         batch = new SpriteBatch();
@@ -98,6 +98,9 @@ public class GameScreen implements Screen {
         batch.begin();
 
         renderBackground(deltaTime);
+
+        duckEngine.addDucks(deltaTime, obstacleEngine.getLastObstacleBoundingBox());
+        duckEngine.renderDucks(deltaTime, backgroundScrollingSpeed, batch);
 
         playerEngine.renderLasers(deltaTime, backgroundScrollingSpeed, batch);
         playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
@@ -185,7 +188,7 @@ public class GameScreen implements Screen {
         headsUpDisplay.dispose();
         obstacleEngine.dispose();
         playerEngine.dispose();
-        duckCatchEngine.dispose();
+        duckEngine.dispose();
 
         gameNavigation = null;
     }
@@ -230,7 +233,7 @@ public class GameScreen implements Screen {
 
         while (laserIterator.hasNext()) {
             ILaser laser = laserIterator.next();
-            final ListIterator<IDuck> duckIterator = duckCatchEngine.getDucks().listIterator();
+            final ListIterator<IDuck> duckIterator = duckEngine.getDucks().listIterator();
 
             while (duckIterator.hasNext()) {
                 IDuck duck = duckIterator.next();
