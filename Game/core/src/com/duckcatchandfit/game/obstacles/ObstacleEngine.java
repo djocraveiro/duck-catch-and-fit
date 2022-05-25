@@ -4,7 +4,6 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.duckcatchandfit.game.WorldMatrix;
-import com.duckcatchandfit.game.players.IPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +33,12 @@ public class ObstacleEngine {
 
     //#endregion
 
+    //#region Properties
+
+    public List<IObstacle> getObstacles() { return obstacles; }
+
+    //#endregion
+
     //#region Initializers
 
     public ObstacleEngine(WorldMatrix worldMatrix, float timeBetweenNewObstacles, Texture treeTexture,
@@ -59,7 +64,8 @@ public class ObstacleEngine {
             Rectangle boundingBox = worldMatrix.getCellBoundingBox(0, lastObstacleColIndex);
 
             if (lastObstacleBoundingBox == null || !lastObstacleBoundingBox.overlaps(boundingBox)) {
-                obstacles.add(new Obstacle(boundingBox, getObstacleTexture()));
+                Rectangle obstacleBoundingBox = new Rectangle(boundingBox);
+                obstacles.add(new Obstacle(obstacleBoundingBox, getObstacleTexture()));
 
                 lastObstacleBoundingBox = worldMatrix.getCellBoundingBox(1, lastObstacleColIndex);
             }
@@ -86,16 +92,6 @@ public class ObstacleEngine {
         }
 
         return removedCount;
-    }
-
-    public boolean detectCollisions(IPlayer player) {
-        for (IObstacle obstacle : obstacles) {
-            if (player.intersects(obstacle)) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     public void dispose() {

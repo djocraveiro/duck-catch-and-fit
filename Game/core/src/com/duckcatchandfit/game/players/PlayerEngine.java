@@ -4,6 +4,11 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.duckcatchandfit.game.WorldMatrix;
+import com.duckcatchandfit.game.obstacles.IObstacle;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
 
 public class PlayerEngine {
 
@@ -15,9 +20,11 @@ public class PlayerEngine {
     // Game objects
     private final IPlayer player;
     private int playerLastColIndex;
+    private final List<ILaser> lasers = new ArrayList<>();
 
     //Graphics
     private final Texture playerTexture;
+    private final Texture laserTexture;
 
     //#endregion
 
@@ -25,11 +32,13 @@ public class PlayerEngine {
 
     public IPlayer getPlayer() { return player; }
 
+    public List<ILaser> getLasers() { return lasers; }
+
     //#endregion
 
     //#region Initializers
 
-    public PlayerEngine(WorldMatrix worldMatrix, Texture playerTexture) {
+    public PlayerEngine(WorldMatrix worldMatrix, Texture playerTexture, Texture laserTexture) {
         this.worldMatrix = worldMatrix;
         this.playerLastColIndex = 1;
 
@@ -37,16 +46,38 @@ public class PlayerEngine {
         Rectangle playerBoundingBox = worldMatrix.getCellBoundingBox(bottomRow, playerLastColIndex);
 
         this.playerTexture = playerTexture;
-        this.player = new Player(playerBoundingBox, playerTexture);
+        this.laserTexture = laserTexture;
+        this.player = new Player(playerBoundingBox, playerTexture, laserTexture);
     }
 
     //#endregion
 
     //#region Public Methods
 
+    public void renderLasers(float deltaTime, float scrollingSpeed, SpriteBatch batch) {
+        ListIterator<ILaser> iterator = lasers.listIterator();
+
+        while (iterator.hasNext()) {
+            ILaser laser = iterator.next();
+
+            laser.update(deltaTime);
+            laser.draw(batch);
+
+            if (laser.isOutside(worldMatrix.getWorldBoundingBox())) {
+                iterator.remove();
+            }
+        }
+    }
+
     public void renderPlayer(float deltaTime, float scrollingSpeed, SpriteBatch batch) {
         player.update(deltaTime);
         player.draw(batch);
+    }
+
+    public void fireLaser() {
+        if (player.canFireLaser()) {
+            lasers.add(player.fireLaser());
+        }
     }
 
     public void movePlayerLeft() {
@@ -69,6 +100,7 @@ public class PlayerEngine {
 
     public void dispose() {
         playerTexture.dispose();
+        laserTexture.dispose();
     }
 
     //#endregion

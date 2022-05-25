@@ -5,23 +5,25 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 import com.duckcatchandfit.game.IGameNavigation;
 import com.duckcatchandfit.game.WorldMatrix;
-import com.duckcatchandfit.game.duckcatch.DuckCatchEngine;
+import com.duckcatchandfit.game.ducks.DuckEngine;
+import com.duckcatchandfit.game.ducks.IDuck;
+import com.duckcatchandfit.game.obstacles.IObstacle;
+import com.duckcatchandfit.game.players.ILaser;
+import com.duckcatchandfit.game.players.IPlayer;
 import com.duckcatchandfit.game.players.PlayerEngine;
 import com.duckcatchandfit.game.obstacles.ObstacleEngine;
+import com.duckcatchandfit.game.screens.components.HeadsUpDisplay;
 
-import java.util.Locale;
+import java.util.List;
+import java.util.ListIterator;
 
 public class GameScreen implements Screen {
 
@@ -50,7 +52,7 @@ public class GameScreen implements Screen {
     // Game objects
     private final ObstacleEngine obstacleEngine;
     private final PlayerEngine playerEngine;
-    private final DuckCatchEngine duckCatchEngine;
+    private final DuckEngine duckCatchEngine;
     private int score = 0;
 
     //#endregion
@@ -76,9 +78,11 @@ public class GameScreen implements Screen {
                 new Texture("rock.png"));
 
         playerEngine = new PlayerEngine(worldMatrix,
-                new Texture("character.png"));
+                new Texture("character.png"),
+                new Texture("laser.png"));
 
-        duckCatchEngine = new DuckCatchEngine();
+        duckCatchEngine = new DuckEngine(worldMatrix, 10.0f,
+                new Texture("duck.png"));
 
         batch = new SpriteBatch();
 
@@ -95,9 +99,10 @@ public class GameScreen implements Screen {
 
         renderBackground(deltaTime);
 
+        playerEngine.renderLasers(deltaTime, backgroundScrollingSpeed, batch);
         playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
 
-        boolean endGame = obstacleEngine.detectCollisions(playerEngine.getPlayer());
+        boolean endGame = detectPlayerAndObstacleCollision();
         if (endGame) {
             batch.end();
             gameNavigation.ShowGameOverScreen(score);
@@ -109,7 +114,12 @@ public class GameScreen implements Screen {
         int skippedObstacles = obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
         score += skippedObstacles;
 
-        headsUpDisplay.renderHeadsUpDisplay(score, batch);
+        int ducksCaught = detectLaserAndDuckCollision();
+        score += ducksCaught * 5;
+
+        detectLaserAndObstacleCollision();
+
+        headsUpDisplay.renderHeadsUpDisplay(score, 1, batch);
 
         batch.end();
     }
@@ -160,6 +170,9 @@ public class GameScreen implements Screen {
                 else if (keycode == Input.Keys.RIGHT) {
                     playerEngine.movePlayerRight();
                 }
+                else if (keycode == Input.Keys.SPACE) {
+                    playerEngine.fireLaser();
+                }
 
                 return true;
             }
@@ -195,6 +208,62 @@ public class GameScreen implements Screen {
         batch.draw(background,
                 0, -backgroundOffset + WORLD_HEIGHT,
                 WORLD_WIDTH, WORLD_HEIGHT);
+    }
+
+    public boolean detectPlayerAndObstacleCollision() {
+        final IPlayer player = playerEngine.getPlayer();
+        final List<IObstacle> obstacles = obstacleEngine.getObstacles();
+
+        for (IObstacle obstacle : obstacles) {
+            if (player.intersects(obstacle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private int detectLaserAndDuckCollision() {
+        final ListIterator<ILaser> laserIterator = playerEngine.getLasers().listIterator();
+
+        int ducksCaught = 0;
+
+        while (laserIterator.hasNext()) {
+            ILaser laser = laserIterator.next();
+            final ListIterator<IDuck> duckIterator = duckCatchEngine.getDucks().listIterator();
+
+            while (duckIterator.hasNext()) {
+                IDuck duck = duckIterator.next();
+
+                if (laser.intersects(duck)) {
+                    laserIterator.remove();
+                    duckIterator.remove();
+
+                    ducksCaught++;
+
+                    break;
+                }
+            }
+        }
+
+        return ducksCaught;
+    }
+
+    private void detectLaserAndObstacleCollision() {
+        final ListIterator<ILaser> iterator = playerEngine.getLasers().listIterator();
+        final List<IObstacle> obstacles = obstacleEngine.getObstacles();
+
+        while (iterator.hasNext()) {
+            ILaser laser = iterator.next();
+
+            for (IObstacle obstacle : obstacles) {
+                if (laser.intersects(obstacle)) {
+                    iterator.remove();
+
+                    break;
+                }
+            }
+        }
     }
 
     //#endregion

@@ -12,21 +12,22 @@ public class Player implements IPlayer {
     // Position and dimensions
     private final Rectangle boundingBox;
 
+    // Timing
+    private final float timeBetweenShots = 1.0f;
+    private float timeSinceLastShot = 0;
+
     // Graphics
     private final Texture playerTexture;
+    private final Texture laserTexture;
 
     //#endergion
 
     //#region Initializers
 
-    public Player(float x, float y, float width, float height, Texture playerTexture) {
-        this.boundingBox = new Rectangle(x, y, width, height);
+    public Player(Rectangle boundingBox, Texture playerTexture, Texture laserTexture) {
+        this.boundingBox = boundingBox;
         this.playerTexture = playerTexture;
-    }
-
-    public Player(Rectangle boundingBox, Texture treeTexture) {
-        this.boundingBox = new Rectangle(boundingBox);
-        this.playerTexture = treeTexture;
+        this.laserTexture = laserTexture;
     }
 
     //#endregion
@@ -35,7 +36,7 @@ public class Player implements IPlayer {
 
     @Override
     public void update(float deltaTime) {
-
+        timeSinceLastShot += deltaTime;
     }
 
     @Override
@@ -54,6 +55,25 @@ public class Player implements IPlayer {
         batch.draw(playerTexture,
                 boundingBox.x, boundingBox.y,
                 boundingBox.width, boundingBox.height);
+    }
+
+    @Override
+    public boolean canFireLaser() {
+        return (timeSinceLastShot - timeBetweenShots >= 0);
+    }
+
+    @Override
+    public ILaser fireLaser() {
+        Rectangle laserBoundingBox = new Rectangle(
+                boundingBox.x + boundingBox.width * 0.7f,
+                boundingBox.y + boundingBox.height * 0.9f,
+                1.0f, 4.0f);
+
+        ILaser laser = new Laser(laserBoundingBox, 45, laserTexture);
+
+        timeSinceLastShot = 0;
+
+        return laser;
     }
 
     //#endregion

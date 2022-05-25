@@ -1,4 +1,4 @@
-package com.duckcatchandfit.game.screens;
+package com.duckcatchandfit.game.screens.components;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
@@ -48,7 +48,7 @@ public class HeadsUpDisplay {
 
     //#region Public Methods
 
-    public void renderHeadsUpDisplay(int score, SpriteBatch batch) {
+    public void renderHeadsUpDisplay(int score, int speed, SpriteBatch batch) {
         //render top row labels
         font.draw(batch, "Score", hudLeftX, hudRow1Y, hudSectionWidth, Align.left, false);
         font.draw(batch, "Speed", hudRightX, hudRow1Y, hudSectionWidth, Align.right, false);
@@ -56,7 +56,7 @@ public class HeadsUpDisplay {
         //render second row values
         font.draw(batch, String.valueOf(score),
                 hudLeftX, hudRow2Y, hudSectionWidth, Align.left, false);
-        font.draw(batch, 1 + " ",
+        font.draw(batch, speed + " ",
                 hudRightX, hudRow2Y, hudSectionWidth, Align.right, false);
     }
 

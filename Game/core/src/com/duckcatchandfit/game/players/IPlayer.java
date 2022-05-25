@@ -12,4 +12,8 @@ public interface IPlayer {
     void translate(float xChange, float yChange);
 
     void draw(Batch batch);
+
+    boolean canFireLaser();
+
+    ILaser fireLaser();
 }
