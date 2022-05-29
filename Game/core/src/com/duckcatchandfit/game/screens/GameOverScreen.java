@@ -1,23 +1,28 @@
 package com.duckcatchandfit.game.screens;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.Preferences;
-import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.*;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.duckcatchandfit.game.IGameNavigation;
 
-public class GameOverScreen extends ScreenAdapter {
+public class GameOverScreen implements Screen {
 
     //#region Fields
 
     // Navigation
     private IGameNavigation gameNavigation;
+
+    // Screen
+    private final Camera camera;
+    private final Viewport viewport;
 
     // Scores
     private final int score;
@@ -33,6 +38,10 @@ public class GameOverScreen extends ScreenAdapter {
 
     public GameOverScreen(IGameNavigation gameNavigation, int score) {
         this.gameNavigation = gameNavigation;
+
+        camera = new OrthographicCamera();
+        viewport = new StretchViewport(72, 128, camera);
+
         this.score = score;
         batch = new SpriteBatch();
         font = loadFont();
@@ -57,8 +66,8 @@ public class GameOverScreen extends ScreenAdapter {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        final float screenWidth = Gdx.graphics.getWidth();
-        final float screenHeight = Gdx.graphics.getHeight();
+        final float screenWidth = viewport.getWorldWidth();
+        final float screenHeight = viewport.getWorldHeight();
         final float verticalMargin = font.getCapHeight() * 2.0f;
 
         batch.begin();
@@ -80,6 +89,22 @@ public class GameOverScreen extends ScreenAdapter {
                 screenWidth, Align.center, false);
 
         batch.end();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height, true);
+        batch.setProjectionMatrix(camera.combined);
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
     }
 
     @Override
@@ -124,7 +149,7 @@ public class GameOverScreen extends ScreenAdapter {
         BitmapFont font = fontGenerator.generateFont(fontParameter);
         fontGenerator.dispose();
 
-        font.getData().setScale(0.5f);
+        font.getData().setScale(0.1f);
 
         return font;
     }

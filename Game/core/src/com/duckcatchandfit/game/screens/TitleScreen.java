@@ -4,21 +4,25 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.viewport.StretchViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 import com.duckcatchandfit.game.IGameNavigation;
 
-public class TitleScreen extends ScreenAdapter implements Screen {
+public class TitleScreen implements Screen {
 
     //#region Fields
 
     // Navigation
     private IGameNavigation gameNavigation;
+
+    // Screen
+    private final Camera camera;
+    private final Viewport viewport;
 
     // Graphics
     private final SpriteBatch batch;
@@ -31,6 +35,10 @@ public class TitleScreen extends ScreenAdapter implements Screen {
 
     public TitleScreen(IGameNavigation gameNavigation) {
         this.gameNavigation = gameNavigation;
+
+        camera = new OrthographicCamera();
+        viewport = new StretchViewport(72, 128, camera);
+
         batch = new SpriteBatch();
         logoTexture = new Texture("duck-catch-and-fit.png");
         font = loadFont();
@@ -45,29 +53,45 @@ public class TitleScreen extends ScreenAdapter implements Screen {
         Gdx.gl.glClearColor(0.1f, 0.1f, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        final float screenWidth = Gdx.graphics.getWidth();
-        final float screenHeight = Gdx.graphics.getHeight();
+        final float screenWidth = viewport.getWorldWidth();
+        final float screenHeight = viewport.getWorldHeight();
 
         batch.begin();
 
-        font.getData().setScale(0.6f);
+        font.getData().setScale(0.14f);
         font.draw(batch, "Duck Catch And Fit",
                 0, screenHeight * 0.8f,
                 screenWidth, Align.center, false);
 
-        final float logoSize = 220;
+        final float logoSize = 48;
         final float logoXOffset = logoSize / 2.0f;
         batch.draw(logoTexture,
                 screenWidth * 0.5f - logoXOffset,
                 screenHeight * 0.5f - logoXOffset,
                 logoSize, logoSize);
 
-        font.getData().setScale(0.4f);
+        font.getData().setScale(0.08f);
         font.draw(batch, "Tap to play",
                 0, screenHeight * 0.2f,
                 screenWidth, Align.center, false);
 
         batch.end();
+    }
+
+    @Override
+    public void resize(int width, int height) {
+        viewport.update(width, height, true);
+        batch.setProjectionMatrix(camera.combined);
+    }
+
+    @Override
+    public void pause() {
+
+    }
+
+    @Override
+    public void resume() {
+
     }
 
     @Override
