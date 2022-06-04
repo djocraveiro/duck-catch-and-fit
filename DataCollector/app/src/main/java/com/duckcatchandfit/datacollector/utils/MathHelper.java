@@ -1,5 +1,6 @@
 package com.duckcatchandfit.datacollector.utils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MathHelper {
@@ -30,6 +31,26 @@ public class MathHelper {
         return min;
     }
 
+    public static int minIndex(final List<Float> values) {
+        if (values.isEmpty()) {
+            return 0;
+        }
+
+        float min = Float.MAX_VALUE;
+        int minIndex = 0;
+
+        for (int i = 0; i < values.size(); i++) {
+            Float value = values.get(i);
+
+            if (value < min) {
+                min = value;
+                minIndex = i;
+            }
+        }
+
+        return minIndex;
+    }
+
     public static float mean(final List<Float> values) {
         return mean(values, sum(values));
     }
@@ -56,6 +77,26 @@ public class MathHelper {
         }
 
         return max;
+    }
+
+    public static int maxIndex(final List<Float> values) {
+        if (values.isEmpty()) {
+            return 0;
+        }
+
+        float max = -Float.MAX_VALUE;
+        int maxIndex = 0;
+
+        for (int i = 0; i < values.size(); i++) {
+            Float value = values.get(i);
+
+            if (value > max) {
+                max = value;
+                maxIndex = i;
+            }
+        }
+
+        return maxIndex;
     }
 
     public static float variance(final List<Float> values) {
@@ -108,12 +149,17 @@ public class MathHelper {
         return kurtosis;
     }
 
-    public static float range(List<Float> values) {
-        return max(values) - min(values);
-    }
+    public static List<Float> abs(List<Float> values) {
+        if (values.isEmpty()) {
+            return values;
+        }
 
-    public static float range(float max, float min) {
-        return max - min;
-    }
+        List<Float> result = new ArrayList<>(values.size());
 
+        for (Float value : values) {
+            result.add(Math.abs(value));
+        }
+
+        return result;
+    }
 }

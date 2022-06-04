@@ -18,13 +18,17 @@ import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.utils.DateTime;
 import com.duckcatchandfit.datacollector.utils.Device;
 import weka.classifiers.Classifier;
+import weka.classifiers.trees.RandomForest;
+import weka.core.Attribute;
 import weka.core.Instance;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
 public class TestModeActivity extends AppCompatActivity implements ICollectListener {
@@ -38,8 +42,10 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     private final String deviceId = Device.getDeviceId();
     private boolean isRecording = false;
     private final ActivityReading[] readingBuffer = new ActivityReading[10];
+    private final FeatureExtractor featureExtractor = new FeatureExtractor();
 
     private Classifier classifier;
+    private Instances dataSet;
 
     //#endregion
 
@@ -156,24 +162,6 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
         textViewLog.setText(builder.toString());
     }
 
-    private String getActivityLabel() {
-
-        int checkedId = randomInt(1, 6);
-
-        if (checkedId == 1) {
-            return ActivityReading.JUMP_LEFT;
-        }
-        else if (checkedId == 2) {
-            return ActivityReading.JUMP_RIGHT;
-        }
-
-        return ActivityReading.STAYING;
-    }
-
-    public static int randomInt(int min, int max) {
-        return min + (int)(Math.random() * ((max - min) + 1));
-    }
-
     //#region ICollectListener
 
     @Override
@@ -189,15 +177,15 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
         }
 
         reading.setDeviceId(deviceId);
-        reading.setActivity(getActivityLabel());
+        reading.setActivity(activityLabel);
 
         exec.getMainThread().execute(() -> logActivityPrediction(reading));
 
-        if (!csvExporter.hasHeader()) {
+        /*if (!csvExporter.hasHeader()) {
             csvExporter.writeHeader(this, reading);
         }
 
-        csvExporter.writeToFile(this, reading);
+        csvExporter.writeToFile(this, reading);*/
     }
 
     //#endregion
@@ -207,37 +195,37 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     //#region Private Methods
 
     private Classifier loadModel() {
-        InputStream inputStream = null;
+        Classifier classifier = null;
+
         try {
-            // deserialize model
-            inputStream = getAssets().open("randomFores-test01.model");
-            return (Classifier) weka.core.SerializationHelper.read(inputStream);
+            final String modelFile = "randomForest-test01.model";
+            classifier = (Classifier) weka.core.SerializationHelper.read(getAssets().open(modelFile));
+
+            final String datasetFile = "aux-dataset.arff";
+            ConverterUtils.DataSource ds = new ConverterUtils.DataSource(getAssets().open(datasetFile));
+            dataSet = ds.getDataSet();
+
+            final int classIndex = dataSet.attribute("activity-class").index();
+            dataSet.setClassIndex(classIndex);
         }
         catch (Exception e) {
             Toast.makeText(this, getString(R.string.error_loading_model), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
-        finally {
-            if (inputStream != null) {
-                try {
-                    inputStream.close();
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
 
-        return null;
+        return classifier;
     }
 
     private String predictClass(final ActivityReading reading) {
-        final Instance unlabeledInstance = FeatureExtractor.toInstance(reading);
+        final Instance unlabeledInstance = featureExtractor.toInstance(reading);
 
         try {
+            dataSet.clear();
+            unlabeledInstance.setDataset(dataSet);
+
             double prediction = classifier.classifyInstance(unlabeledInstance);
 
-            return String.valueOf(prediction);
+            return dataSet.classAttribute().value((int)prediction);
         }
         catch (Exception e) {
             Toast.makeText(this, getString(R.string.prediction_error), Toast.LENGTH_SHORT).show();

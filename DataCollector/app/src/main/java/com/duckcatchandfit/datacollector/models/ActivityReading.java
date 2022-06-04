@@ -112,6 +112,8 @@ public class ActivityReading implements ICsvData {
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String deviceId) {this.deviceId = deviceId; }
 
+    public int getInstanceSize() { return instanceSize; }
+
     //#endregion
 
     //#region Public Methods
