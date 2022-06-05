@@ -47,4 +47,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation("com.jcraft:jsch:0.1.55")
     implementation files('libs/weka_3_8_6_mobile.jar')
+    implementation group: 'org.apache.commons', name: 'commons-math3', version: '3.6.1'
 }

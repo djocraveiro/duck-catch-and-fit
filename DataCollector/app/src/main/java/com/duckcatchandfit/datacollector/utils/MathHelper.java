@@ -3,9 +3,24 @@ package com.duckcatchandfit.datacollector.utils;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.transform.DftNormalization;
+import org.apache.commons.math3.transform.FastFourierTransformer;
+import org.apache.commons.math3.transform.TransformType;
+
 public class MathHelper {
 
     public static float sum(final List<Float> values) {
+        float sum = 0;
+
+        for (float value : values) {
+            sum += value;
+        }
+
+        return sum;
+    }
+
+    public static float sum(float[] values) {
         float sum = 0;
 
         for (float value : values) {
@@ -129,6 +144,21 @@ public class MathHelper {
         return (float)Math.sqrt(variance);
     }
 
+    public static float meanAbsoluteDeviation(final List<Float> values) {
+        float mad = 0;
+        float mean = MathHelper.mean(values);
+
+        if (values.size() > 0) {
+            for (Float value : values) {
+                mad += Math.abs(value - mean);
+            }
+
+            mad = (float) Math.sqrt(mad / (float) values.size());
+        }
+
+        return mad;
+    }
+
     public static float kurtosis(final List<Float> values) {
         return kurtosis(values, mean(values), stdDeviation(values));
     }
@@ -161,5 +191,24 @@ public class MathHelper {
         }
 
         return result;
+    }
+
+    private static final FastFourierTransformer fft = new FastFourierTransformer(DftNormalization.STANDARD);
+    public static float[] calFft(List<Float> values) {
+        final Complex[] input = new Complex[values.size()];
+
+        for (int i = 0; i < input.length; i++) {
+            input[i] = new Complex(values.get(i));
+        }
+
+        Complex[] result = fft.transform(input, TransformType.FORWARD);
+        float[] magFft = new float[result.length];
+
+        for (int i = 0; i < input.length; i++) {
+            magFft[i] = (float)Math.sqrt(
+                Math.pow(result[i].getReal(), 2) + Math.pow(result[i].getImaginary(), 2));
+        }
+
+        return magFft;
     }
 }

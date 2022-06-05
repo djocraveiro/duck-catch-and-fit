@@ -300,9 +300,31 @@ public class FeatureExtractor
         instance.setValue(index++, sma);
     }
 
-    private void addPearsonCorrelationCoefficient(Instance instance, List<Float> valuesA, List<Float> valuesB) {
-        //TODO fill with correct values
-        instance.setValue(index++, 1);
+    private void addPearsonCorrelationCoefficient(Instance instance, List<Float> aValues, List<Float> bValues) {
+        float correlation = 0;
+        float covariance = 0;
+
+        if (aValues.size() > 0 && bValues.size() > 0)
+        {
+            float meanA = MathHelper.mean(aValues);
+            float meanB = MathHelper.mean(bValues);
+            float stdDeviationA = MathHelper.stdDeviation(aValues);
+            float stdDeviationB = MathHelper.stdDeviation(bValues);
+
+            for (int i = 0; i < aValues.size(); i++)
+            {
+                covariance += (aValues.get(i) - meanA) * (bValues.get(i) - meanB);
+            }
+
+            covariance = covariance / (float) aValues.size();
+
+            if (stdDeviationA * stdDeviationB != 0)
+            {
+                correlation = covariance / (stdDeviationA * stdDeviationB);
+            }
+        }
+
+        instance.setValue(index++, correlation);
     }
 
     private void addMinMaxPositionDiff(Instance instance, List<Float> values) {
@@ -369,18 +391,62 @@ public class FeatureExtractor
     }
 
     private void addMeanAbsoluteDeviation(Instance instance, List<Float> values) {
-        //TODO fill with correct values
-        instance.setValue(index++, 1);
+        instance.setValue(index++, MathHelper.meanAbsoluteDeviation(values));
     }
 
     private void addEnergy(Instance instance, List<Float> values) {
-        //TODO fill with correct values
-        instance.setValue(index++, 1);
+        float[] fftValues = MathHelper.calFft(values);
+        float energy = 0;
+
+        for (Float fftValue : fftValues) {
+            energy += Math.pow(fftValue, 2);
+        }
+
+        if (fftValues.length > 0)
+        {
+            energy = energy / (float) fftValues.length;
+        }
+
+        instance.setValue(index++, energy);
     }
 
     private void addEntropy(Instance instance, List<Float> values) {
-        //TODO fill with correct values
-        instance.setValue(index++, 1);
+        float[] fftValues = MathHelper.calFft(values);
+        float entropy = 0;
+        float[] psd = new float[fftValues.length];
+
+        if (fftValues.length > 0)
+        {
+            // Calculate Power Spectral Density
+            for (int i = 0; i < fftValues.length; i++)
+            {
+                psd[i] = (float) (Math.pow(fftValues[i], 2) / fftValues.length);
+            }
+
+            float psdSum = MathHelper.sum(psd);
+
+            if (psdSum > 0)
+            {
+                // Normalize calculated PSD so that it can be viewed as a Probability Density Function
+                for (int i = 0; i < fftValues.length; i++)
+                {
+                    psd[i] = psd[i] / psdSum;
+                }
+
+                // Calculate the Frequency Domain Entropy
+                for (int i = 0; i < fftValues.length; i++)
+                {
+                    if (psd[i] != 0)
+                    {
+                        entropy += psd[i] * Math.log(psd[i]);
+                    }
+                }
+
+                entropy *= -1;
+            }
+        }
+
+        instance.setValue(index++, entropy);
     }
 
     private void addKurtosis(Instance instance, List<Float> values) {
