@@ -1,6 +1,7 @@
 package com.duckcatchandfit.datacollector.utils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.math3.complex.Complex;
@@ -76,6 +77,30 @@ public class MathHelper {
         }
 
         return sum / (float)values.size();
+    }
+
+    public static float median(final List<Float> values) {
+        float median = 0;
+        int size = values.size();
+
+        if (size > 0) {
+            // Copy values for sorting
+            List<Float> valueCopies = new ArrayList(values);
+
+            // Sort values ascending
+            Collections.sort(valueCopies);
+
+            if (size % 2 == 0) {
+                // Even
+                median = (valueCopies.get(size / 2 - 1) + valueCopies.get(size / 2)) / 2.0f;
+            }
+            else {
+                // Odd
+                median = valueCopies.get((size - 1) / 2);
+            }
+        }
+
+        return median;
     }
 
     public static float max(final List<Float> values) {
@@ -155,6 +180,25 @@ public class MathHelper {
 
             mad = (float) Math.sqrt(mad / (float) values.size());
         }
+
+        return mad;
+    }
+
+    public static float medianAbsoluteDeviation(final List<Float> values) {
+        float mad = 0;
+
+        if (values.isEmpty()) {
+            return mad;
+        }
+
+        float median = MathHelper.median(values);
+        List<Float> medianDiff = new ArrayList<>(values.size());
+
+        for (Float value : values) {
+            medianDiff.add(Math.abs(value - median));
+        }
+
+        mad = MathHelper.median(medianDiff);
 
         return mad;
     }

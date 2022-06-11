@@ -1,6 +1,6 @@
 package com.duckcatchandfit.datacollector.services;
 
-import com.duckcatchandfit.datacollector.models.ActivityReading;
+import com.duckcatchandfit.datacollector.models.IActivityReading;
 import com.duckcatchandfit.datacollector.utils.MathHelper;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
@@ -20,7 +20,7 @@ public class FeatureExtractor
 
     //#region Public Methods
 
-    public Instance toInstance(final ActivityReading reading) {
+    public Instance toInstance(final IActivityReading reading) {
         final Instance instance = new DenseInstance(ATTRIBUTE_SIZE);
         index = 0;
 
@@ -39,11 +39,11 @@ public class FeatureExtractor
         addVectorStats(instance, reading.getGyroscopeZ());
 
         // Index: from 30 up to 34
-        addVectorStats(instance, reading.getGyroscopeX());
+        addVectorStats(instance, reading.getOrientationAngleX());
         // Index: from 35 up to 39
-        addVectorStats(instance, reading.getGyroscopeY());
+        addVectorStats(instance, reading.getOrientationAngleY());
         // Index: from 40 up to 44
-        addVectorStats(instance, reading.getGyroscopeZ());
+        addVectorStats(instance, reading.getOrientationAngleZ());
 
         // Accelerometer
         {
@@ -54,7 +54,7 @@ public class FeatureExtractor
             // Index: from 46 up to 48
             addPearsonCorrelationCoefficient(instance, reading.getAccelerometerX(), reading.getAccelerometerY());
             addPearsonCorrelationCoefficient(instance, reading.getAccelerometerX(), reading.getAccelerometerZ());
-            addPearsonCorrelationCoefficient(instance, reading.getAccelerometerZ(), reading.getAccelerometerZ());
+            addPearsonCorrelationCoefficient(instance, reading.getAccelerometerY(), reading.getAccelerometerZ());
 
             // Index: 49
             addMinMaxPositionDiff(instance, reading.getAccelerometerX());
@@ -71,9 +71,9 @@ public class FeatureExtractor
             addAveragePeakTroughDistance(instance, reading.getAccelerometerZ());
 
             // Index: from 58 up to 60
-            addMeanAbsoluteDeviation(instance, reading.getAccelerometerX());
-            addMeanAbsoluteDeviation(instance, reading.getAccelerometerY());
-            addMeanAbsoluteDeviation(instance, reading.getAccelerometerZ());
+            addMedianAbsoluteDeviation(instance, reading.getAccelerometerX());
+            addMedianAbsoluteDeviation(instance, reading.getAccelerometerY());
+            addMedianAbsoluteDeviation(instance, reading.getAccelerometerZ());
 
             // Index: from 61 up to 63
             addEnergy(instance, reading.getAccelerometerX());
@@ -100,7 +100,7 @@ public class FeatureExtractor
             // Index: from 71 up to 73
             addPearsonCorrelationCoefficient(instance, reading.getGyroscopeX(), reading.getGyroscopeY());
             addPearsonCorrelationCoefficient(instance, reading.getGyroscopeX(), reading.getGyroscopeZ());
-            addPearsonCorrelationCoefficient(instance, reading.getGyroscopeZ(), reading.getGyroscopeY());
+            addPearsonCorrelationCoefficient(instance, reading.getGyroscopeY(), reading.getGyroscopeZ());
 
             // Index: from 74 up to 76
             addAveragePeakTroughDistance(instance, reading.getGyroscopeX());
@@ -108,9 +108,9 @@ public class FeatureExtractor
             addAveragePeakTroughDistance(instance, reading.getGyroscopeZ());
 
             // Index: from 77 up to 79
-            addMeanAbsoluteDeviation(instance, reading.getGyroscopeX());
-            addMeanAbsoluteDeviation(instance, reading.getGyroscopeY());
-            addMeanAbsoluteDeviation(instance, reading.getGyroscopeZ());
+            addMedianAbsoluteDeviation(instance, reading.getGyroscopeX());
+            addMedianAbsoluteDeviation(instance, reading.getGyroscopeY());
+            addMedianAbsoluteDeviation(instance, reading.getGyroscopeZ());
 
             // Index: from 80 up to 82
             addEnergy(instance, reading.getGyroscopeX());
@@ -137,7 +137,7 @@ public class FeatureExtractor
             // Index: from 90 up to 92
             addPearsonCorrelationCoefficient(instance, reading.getOrientationAngleX(), reading.getOrientationAngleY());
             addPearsonCorrelationCoefficient(instance, reading.getOrientationAngleX(), reading.getOrientationAngleZ());
-            addPearsonCorrelationCoefficient(instance, reading.getOrientationAngleZ(), reading.getOrientationAngleY());
+            addPearsonCorrelationCoefficient(instance, reading.getOrientationAngleY(), reading.getOrientationAngleZ());
 
             // Index: from 93 up to 95
             addEnergy(instance, reading.getOrientationAngleX());
@@ -342,7 +342,7 @@ public class FeatureExtractor
         int curQuarterStart = 0;
 
         for (int i = 1; i <= 4; i++) {
-            List<Float> quarterValues = values.subList(curQuarterStart, curQuarterStart + (quarterSize - 1));
+            List<Float> quarterValues = values.subList(curQuarterStart, curQuarterStart + quarterSize);
             instance.setValue(index++, MathHelper.mean(quarterValues));
 
             curQuarterStart += quarterSize;
@@ -390,8 +390,8 @@ public class FeatureExtractor
         instance.setValue(index++, sum / arraySize);
     }
 
-    private void addMeanAbsoluteDeviation(Instance instance, List<Float> values) {
-        instance.setValue(index++, MathHelper.meanAbsoluteDeviation(values));
+    private void addMedianAbsoluteDeviation(Instance instance, List<Float> values) {
+        instance.setValue(index++, MathHelper.medianAbsoluteDeviation(values));
     }
 
     private void addEnergy(Instance instance, List<Float> values) {
@@ -404,7 +404,7 @@ public class FeatureExtractor
 
         if (fftValues.length > 0)
         {
-            energy = energy / (float) fftValues.length;
+            energy = energy / (float)fftValues.length;
         }
 
         instance.setValue(index++, energy);
@@ -420,7 +420,7 @@ public class FeatureExtractor
             // Calculate Power Spectral Density
             for (int i = 0; i < fftValues.length; i++)
             {
-                psd[i] = (float) (Math.pow(fftValues[i], 2) / fftValues.length);
+                psd[i] = (float) (Math.pow(fftValues[i], 2) / (float)fftValues.length);
             }
 
             float psdSum = MathHelper.sum(psd);

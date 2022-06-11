@@ -7,7 +7,7 @@ import com.duckcatchandfit.datacollector.utils.DateTime;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class ActivityReading implements ICsvData {
+public class ActivityReading implements ICsvData, IActivityReading {
 
     //#region Constants
 
@@ -71,47 +71,65 @@ public class ActivityReading implements ICsvData {
 
     //#region Properties
 
+    @Override
     public boolean isFullFilled() { return accelerometerX.size() == instanceSize; }
 
+    @Override
     public Date getStartDate() { return startDate; }
     public void setStartDate(Date startDate) { this.startDate = startDate; }
 
+    @Override
     public Date getEndDate() { return endDate; }
     public void setEndDate(Date endDate) { this.endDate = endDate; }
 
+    @Override
     public int getAccelerometerAccuracy() { return accelerometerAccuracy; }
     public void setAccelerometerAccuracy(int accelerometerAccuracy) {
         this.accelerometerAccuracy = accelerometerAccuracy;
     }
 
+    @Override
     public List<Float> getAccelerometerX() { return accelerometerX; }
+    @Override
     public List<Float> getAccelerometerY() { return accelerometerY; }
+    @Override
     public List<Float> getAccelerometerZ() { return accelerometerZ; }
 
+    @Override
     public int getGyroscopeAccuracy() { return gyroscopeAccuracy; }
     public void setGyroscopeAccuracy(int gyroscopeAccuracy) {
         this.gyroscopeAccuracy = gyroscopeAccuracy;
     }
 
+    @Override
     public List<Float> getGyroscopeX() { return gyroscopeX; }
+    @Override
     public List<Float> getGyroscopeY() { return gyroscopeY; }
+    @Override
     public List<Float> getGyroscopeZ() { return gyroscopeZ; }
 
+    @Override
     public int getMagneticFieldAccuracy() { return magneticFieldAccuracy; }
     public void setMagneticFieldAccuracy(int magneticFieldAccuracy) {
         this.magneticFieldAccuracy = magneticFieldAccuracy;
     }
 
+    @Override
     public List<Float> getOrientationAngleX() { return orientationAngleX; }
+    @Override
     public List<Float> getOrientationAngleY() { return orientationAngleY; }
+    @Override
     public List<Float> getOrientationAngleZ() { return orientationAngleZ; }
 
+    @Override
     public String getActivity() { return activity; }
     public void setActivity(String activity) { this.activity = activity; }
 
+    @Override
     public String getDeviceId() { return deviceId; }
     public void setDeviceId(String deviceId) {this.deviceId = deviceId; }
 
+    @Override
     public int getInstanceSize() { return instanceSize; }
 
     //#endregion

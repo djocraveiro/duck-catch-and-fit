@@ -18,17 +18,13 @@ import com.duckcatchandfit.datacollector.utils.ApplicationExecutors;
 import com.duckcatchandfit.datacollector.utils.DateTime;
 import com.duckcatchandfit.datacollector.utils.Device;
 import weka.classifiers.Classifier;
-import weka.classifiers.trees.RandomForest;
-import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 public class TestModeActivity extends AppCompatActivity implements ICollectListener {
@@ -46,6 +42,7 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
 
     private Classifier classifier;
     private Instances dataSet;
+    private long lastLateralPrediction = 0;
 
     //#endregion
 
@@ -133,12 +130,6 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     }
 
     private void logActivityPrediction(final ActivityReading reading) {
-        final ActivityReading lastActivity = readingBuffer[readingBuffer.length - 1];
-
-        if (lastActivity != null && lastActivity.getActivity().equals(reading.getActivity())) {
-            return;
-        }
-
         final StringBuilder builder = new StringBuilder();
         final DateFormat dateFormat = DateTime.getLocalDateFormat();
 
@@ -198,7 +189,7 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
         Classifier classifier = null;
 
         try {
-            final String modelFile = "randomForest-test01.model";
+            final String modelFile = "randomForest.model";
             classifier = (Classifier) weka.core.SerializationHelper.read(getAssets().open(modelFile));
 
             final String datasetFile = "aux-dataset.arff";
@@ -217,6 +208,9 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     }
 
     private String predictClass(final ActivityReading reading) {
+        final int SKIP_PREDICTION_MILLIS = 800;
+        boolean skipPrediction = System.currentTimeMillis() - lastLateralPrediction < SKIP_PREDICTION_MILLIS;
+
         final Instance unlabeledInstance = featureExtractor.toInstance(reading);
 
         try {
@@ -224,8 +218,14 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
             unlabeledInstance.setDataset(dataSet);
 
             double prediction = classifier.classifyInstance(unlabeledInstance);
+            String label = dataSet.classAttribute().value((int)prediction);
 
-            return dataSet.classAttribute().value((int)prediction);
+            if (label.equals(ActivityReading.JUMP_LEFT) || label.equals(ActivityReading.JUMP_RIGHT)) {
+                label = skipPrediction ? ("skip " + label) : label;
+                lastLateralPrediction = System.currentTimeMillis();
+            }
+
+            return label;
         }
         catch (Exception e) {
             Toast.makeText(this, getString(R.string.prediction_error), Toast.LENGTH_SHORT).show();
