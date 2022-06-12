@@ -15,13 +15,20 @@ public class FeatureExtractorTests {
 
     //#region Setup
 
-    private final double TOLERANCE = 0.000001;
+    private final double TOLERANCE = 0.00001;
 
     private Instances dataSet;
-    private final FakeActivityReading activityReading = new FakeActivityReading();
-    private final FeatureExtractor featureExtractor = new FeatureExtractor();
+    private final FakeActivityReading activityReading;
+    private final FeatureExtractor featureExtractor;
 
     public FeatureExtractorTests() {
+        activityReading = new FakeActivityReading();
+
+        featureExtractor = new FeatureExtractor();
+        featureExtractor.setAccelerometerAptd(true);
+        featureExtractor.setGyroscopeAptd(true);
+        featureExtractor.setGyroscopeMad(true);
+
         try {
             final String datasetFile = "aux-dataset.arff";
             InputStream stream = Objects.requireNonNull(this.getClass().getClassLoader()).getResourceAsStream(datasetFile);

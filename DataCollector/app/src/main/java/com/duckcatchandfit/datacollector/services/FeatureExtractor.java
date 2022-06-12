@@ -15,6 +15,19 @@ public class FeatureExtractor
 
     private final int ATTRIBUTE_SIZE = 103;
     private int index = 0;
+    private boolean addAccelerometerAptd = false;
+    private boolean addGyroscopeAptd = false;
+    private boolean addGyroscopeMad = false;
+
+    //#endregion
+
+    //#region Properties
+
+    public void setAccelerometerAptd(boolean value) { addAccelerometerAptd = value; }
+
+    public void setGyroscopeAptd(boolean value) { addGyroscopeAptd = value; }
+
+    public void setGyroscopeMad(boolean value) { addGyroscopeMad = value; }
 
     //#endregion
 
@@ -66,9 +79,11 @@ public class FeatureExtractor
             addVectorQuartersMean(instance, reading.getAccelerometerX());
 
             // Index: from 55 up to 57
-            addAveragePeakTroughDistance(instance, reading.getAccelerometerX());
-            addAveragePeakTroughDistance(instance, reading.getAccelerometerY());
-            addAveragePeakTroughDistance(instance, reading.getAccelerometerZ());
+            if (addAccelerometerAptd) {
+                addAveragePeakTroughDistance(instance, reading.getAccelerometerX());
+                addAveragePeakTroughDistance(instance, reading.getAccelerometerY());
+                addAveragePeakTroughDistance(instance, reading.getAccelerometerZ());
+            }
 
             // Index: from 58 up to 60
             addMedianAbsoluteDeviation(instance, reading.getAccelerometerX());
@@ -103,14 +118,18 @@ public class FeatureExtractor
             addPearsonCorrelationCoefficient(instance, reading.getGyroscopeY(), reading.getGyroscopeZ());
 
             // Index: from 74 up to 76
-            addAveragePeakTroughDistance(instance, reading.getGyroscopeX());
-            addAveragePeakTroughDistance(instance, reading.getGyroscopeY());
-            addAveragePeakTroughDistance(instance, reading.getGyroscopeZ());
+            if (addGyroscopeAptd) {
+                addAveragePeakTroughDistance(instance, reading.getGyroscopeX());
+                addAveragePeakTroughDistance(instance, reading.getGyroscopeY());
+                addAveragePeakTroughDistance(instance, reading.getGyroscopeZ());
+            }
 
             // Index: from 77 up to 79
-            addMedianAbsoluteDeviation(instance, reading.getGyroscopeX());
-            addMedianAbsoluteDeviation(instance, reading.getGyroscopeY());
-            addMedianAbsoluteDeviation(instance, reading.getGyroscopeZ());
+            if (addGyroscopeMad) {
+                addMedianAbsoluteDeviation(instance, reading.getGyroscopeX());
+                addMedianAbsoluteDeviation(instance, reading.getGyroscopeY());
+                addMedianAbsoluteDeviation(instance, reading.getGyroscopeZ());
+            }
 
             // Index: from 80 up to 82
             addEnergy(instance, reading.getGyroscopeX());
