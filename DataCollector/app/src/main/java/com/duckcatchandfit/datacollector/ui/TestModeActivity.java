@@ -61,6 +61,7 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
         fileServer.setRemoteDirectory(BuildConfig.SFTP_DIR);
 
         classifier = loadModel();
+        dataSet = loadDataSet();
     }
 
     @Override
@@ -204,7 +205,19 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
         try {
             final String modelFile = "randomForest.model";
             classifier = (Classifier) weka.core.SerializationHelper.read(getAssets().open(modelFile));
+        }
+        catch (Exception e) {
+            Toast.makeText(this, getString(R.string.error_loading_model), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
 
+        return classifier;
+    }
+
+    private Instances loadDataSet() {
+        Instances dataSet = null;
+
+        try {
             final String datasetFile = "aux-dataset.arff";
             ConverterUtils.DataSource ds = new ConverterUtils.DataSource(getAssets().open(datasetFile));
             dataSet = ds.getDataSet();
@@ -213,11 +226,11 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
             dataSet.setClassIndex(classIndex);
         }
         catch (Exception e) {
-            Toast.makeText(this, getString(R.string.error_loading_model), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.error_loading_dataset), Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
 
-        return classifier;
+        return dataSet;
     }
 
     private String predictClass(final ActivityReading reading) {
