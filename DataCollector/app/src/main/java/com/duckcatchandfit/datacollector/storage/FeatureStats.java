@@ -1,6 +1,5 @@
-package com.duckcatchandfit.datacollector.models;
+package com.duckcatchandfit.datacollector.storage;
 
-import com.duckcatchandfit.datacollector.storage.ICsvData;
 import com.duckcatchandfit.datacollector.utils.MathHelper;
 
 import java.util.List;

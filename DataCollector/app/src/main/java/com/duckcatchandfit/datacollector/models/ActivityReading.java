@@ -7,7 +7,7 @@ import com.duckcatchandfit.datacollector.utils.DateTime;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class ActivityReading implements ICsvData, IActivityReading {
+public class ActivityReading implements IActivityReading {
 
     //#region Constants
 
@@ -39,9 +39,6 @@ public class ActivityReading implements ICsvData, IActivityReading {
     private final List<Float> orientationAngleZ;
     private String activity;
     private String deviceId;
-
-    private final static FeatureStats stats = new FeatureStats();
-    private final static SimpleDateFormat dateFormat = DateTime.getISO8601DateFormat();
 
     //#endregion
 
@@ -150,136 +147,7 @@ public class ActivityReading implements ICsvData, IActivityReading {
         reading.orientationAngleZ.addAll(this.orientationAngleZ.subList(fromIndex, toIndex));
     }
 
-    @Override
-    public String toCsvHeader(String colSeparator) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append("startDate").append(colSeparator)
-                .append("endDate").append(colSeparator);
-
-        appendAccelerometerHeader(builder, colSeparator);
-        appendGyroscopeHeader(builder, colSeparator);
-        appendMagneticFieldHeader(builder, colSeparator);
-
-        builder.append("activity").append(colSeparator)
-            .append("device-id");
-
-        return builder.toString();
-    }
-
-    @Override
-    public String toCsvRow(String colSeparator) {
-        StringBuilder builder = new StringBuilder();
-
-        builder.append(dateFormat.format(startDate)).append(colSeparator)
-            .append(dateFormat.format(endDate)).append(colSeparator);
-
-        appendAccelerometerData(builder, colSeparator);
-        appendGyroscopeData(builder, colSeparator);
-        appendMagneticFieldData(builder, colSeparator);
-
-        builder.append(activity).append(colSeparator)
-            .append(deviceId);
-
-        return builder.toString();
-    }
-
     //#endregion
 
-    //#region Private Methods
 
-    private void appendAccelerometerHeader(StringBuilder builder, String colSeparator) {
-        builder.append("acc-accuracy").append(colSeparator)
-            .append("acc-x-m/s^2").append(colSeparator)
-            .append("acc-y-m/s^2").append(colSeparator)
-            .append("acc-z-m/s^2").append(colSeparator);
-
-        builder.append(stats.setFeatureName("acc-x")
-                .toCsvHeader(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("acc-y")
-                .toCsvHeader(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("acc-z")
-                .toCsvHeader(colSeparator)).append(colSeparator);
-    }
-
-    private void appendAccelerometerData(StringBuilder builder, String colSeparator) {
-        builder.append(accelerometerAccuracy).append(colSeparator)
-            .append(Arrays.toString(accelerometerX.toArray())).append(colSeparator)
-            .append(Arrays.toString(accelerometerY.toArray())).append(colSeparator)
-            .append(Arrays.toString(accelerometerZ.toArray())).append(colSeparator);
-
-        builder.append(stats.setFeatureName("acc-x")
-                .calc(accelerometerX)
-                .toCsvRow(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("acc-y")
-                .calc(accelerometerY)
-                .toCsvRow(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("acc-z")
-                .calc(accelerometerZ)
-                .toCsvRow(colSeparator)).append(colSeparator);
-    }
-
-    private void appendGyroscopeHeader(StringBuilder builder, String colSeparator) {
-        builder.append("gyr-accuracy").append(colSeparator)
-            .append("gyr-x-rad/s").append(colSeparator)
-            .append("gyr-y-rad/s").append(colSeparator)
-            .append("gyr-z-rad/s").append(colSeparator);
-
-        builder.append(stats.setFeatureName("gyr-x")
-                .toCsvHeader(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("gyr-y")
-                .toCsvHeader(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("gyr-z")
-                .toCsvHeader(colSeparator)).append(colSeparator);
-    }
-
-    private void appendGyroscopeData(StringBuilder builder, String colSeparator) {
-        builder.append(gyroscopeAccuracy).append(colSeparator)
-            .append(Arrays.toString(gyroscopeX.toArray())).append(colSeparator)
-            .append(Arrays.toString(gyroscopeY.toArray())).append(colSeparator)
-            .append(Arrays.toString(gyroscopeZ.toArray())).append(colSeparator);
-
-        builder.append(stats.setFeatureName("gyr-x")
-                .calc(gyroscopeX)
-                .toCsvRow(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("gyr-y")
-                .calc(gyroscopeY)
-                .toCsvRow(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("gyr-z")
-                .calc(gyroscopeZ)
-                .toCsvRow(colSeparator)).append(colSeparator);
-    }
-
-    private void appendMagneticFieldHeader(StringBuilder builder, String colSeparator) {
-        builder.append("mag-accuracy").append(colSeparator)
-                .append("ori-angle-x-rad").append(colSeparator)
-                .append("ori-angle-y-rad").append(colSeparator)
-                .append("ori-angle-z-rad").append(colSeparator);
-
-        builder.append(stats.setFeatureName("ori-angle-x")
-                .toCsvHeader(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("ori-angle-y")
-                .toCsvHeader(colSeparator)).append(colSeparator)
-        .append(stats.setFeatureName("ori-angle-z")
-                .toCsvHeader(colSeparator)).append(colSeparator);
-    }
-
-    private void appendMagneticFieldData(StringBuilder builder, String colSeparator) {
-        builder.append(magneticFieldAccuracy).append(colSeparator)
-            .append(Arrays.toString(orientationAngleX.toArray())).append(colSeparator)
-            .append(Arrays.toString(orientationAngleY.toArray())).append(colSeparator)
-            .append(Arrays.toString(orientationAngleZ.toArray())).append(colSeparator);
-
-        builder.append(stats.setFeatureName("ori-angle-x")
-                .calc(orientationAngleX)
-                .toCsvRow(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("ori-angle-y")
-                .calc(orientationAngleY)
-                .toCsvRow(colSeparator)).append(colSeparator)
-            .append(stats.setFeatureName("ori-angle-z")
-                .calc(orientationAngleZ)
-                .toCsvRow(colSeparator)).append(colSeparator);
-    }
-
-    //#endregion
 }

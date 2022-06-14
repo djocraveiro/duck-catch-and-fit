@@ -9,6 +9,7 @@ import android.os.Bundle;
 import com.duckcatchandfit.datacollector.BuildConfig;
 import com.duckcatchandfit.datacollector.R;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
+import com.duckcatchandfit.datacollector.storage.ActivityReadingCsvAdapter;
 import com.duckcatchandfit.datacollector.services.DataCollector;
 import com.duckcatchandfit.datacollector.services.FeatureExtractor;
 import com.duckcatchandfit.datacollector.services.ICollectListener;
@@ -36,6 +37,7 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     private final DataCollector dataCollector = new DataCollector();
     private final CsvStorage csvExporter = new CsvStorage(getExportFileName());
     private final String deviceId = Device.getDeviceId();
+    private ActivityReadingCsvAdapter readingCsvAdapter = null;
     private boolean isRecording = false;
     private final ActivityReading[] readingBuffer = new ActivityReading[10];
     private final FeatureExtractor featureExtractor = new FeatureExtractor();
@@ -172,11 +174,7 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
 
         exec.getMainThread().execute(() -> logActivityPrediction(reading));
 
-        /*if (!csvExporter.hasHeader()) {
-            csvExporter.writeHeader(this, reading);
-        }
-
-        csvExporter.writeToFile(this, reading);*/
+        //saveReading(reading);
     }
 
     //#endregion
@@ -184,6 +182,21 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     //#endregion
 
     //#region Private Methods
+
+    private void saveReading(final ActivityReading reading) {
+        if (readingCsvAdapter == null) {
+            readingCsvAdapter = new ActivityReadingCsvAdapter(reading);
+        }
+        else {
+            readingCsvAdapter.setActivityReading(reading);
+        }
+
+        if (!csvExporter.hasHeader()) {
+            csvExporter.writeHeader(this, readingCsvAdapter);
+        }
+
+        csvExporter.writeToFile(this, readingCsvAdapter);
+    }
 
     private Classifier loadModel() {
         Classifier classifier = null;

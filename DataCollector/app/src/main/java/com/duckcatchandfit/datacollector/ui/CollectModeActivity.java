@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.duckcatchandfit.datacollector.BuildConfig;
 import com.duckcatchandfit.datacollector.R;
 import com.duckcatchandfit.datacollector.models.ActivityReading;
+import com.duckcatchandfit.datacollector.storage.ActivityReadingCsvAdapter;
 import com.duckcatchandfit.datacollector.services.DataCollector;
 import com.duckcatchandfit.datacollector.services.ICollectListener;
 import com.duckcatchandfit.datacollector.storage.CsvStorage;
@@ -29,6 +30,7 @@ public class CollectModeActivity extends AppCompatActivity implements ICollectLi
     private final DataCollector dataCollector = new DataCollector();
     private final CsvStorage csvExporter = new CsvStorage(getExportFileName());
     private final String deviceId = Device.getDeviceId();
+    private ActivityReadingCsvAdapter readingCsvAdapter = null;
     private boolean isRecording = false;
 
     //#endregion
@@ -166,15 +168,29 @@ public class CollectModeActivity extends AppCompatActivity implements ICollectLi
         reading.setDeviceId(deviceId);
         reading.setActivity(getActivityLabel());
 
-        if (!csvExporter.hasHeader()) {
-            csvExporter.writeHeader(this, reading);
-        }
-
-        csvExporter.writeToFile(this, reading);
+        saveReading(reading);
     }
 
     //#endregion
 
     //#endregion
 
+    //#regio Private Methods
+
+    private void saveReading(final ActivityReading reading) {
+        if (readingCsvAdapter == null) {
+            readingCsvAdapter = new ActivityReadingCsvAdapter(reading);
+        }
+        else {
+            readingCsvAdapter.setActivityReading(reading);
+        }
+
+        if (!csvExporter.hasHeader()) {
+            csvExporter.writeHeader(this, readingCsvAdapter);
+        }
+
+        csvExporter.writeToFile(this, readingCsvAdapter);
+    }
+
+    //#endregion
 }
