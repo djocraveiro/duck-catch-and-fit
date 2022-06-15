@@ -1,4 +1,4 @@
-package com.duckcatchandfit.datacollector.models;
+package com.duckcatchandfit.game.models;
 
 import java.util.Date;
 import java.util.List;

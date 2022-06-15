@@ -4,13 +4,12 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.duckcatchandfit.game.WorldMatrix;
-import com.duckcatchandfit.game.obstacles.IObstacle;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
-public class PlayerEngine {
+public class PlayerEngine implements IPlayerControls {
 
     //#region Fields
 
@@ -74,12 +73,16 @@ public class PlayerEngine {
         player.draw(batch);
     }
 
+    //#region IPlayerControls
+
+    @Override
     public void fireLaser() {
         if (player.canFireLaser()) {
             lasers.add(player.fireLaser());
         }
     }
 
+    @Override
     public void movePlayerLeft() {
         if (playerLastColIndex == 0) {
             return;
@@ -89,6 +92,7 @@ public class PlayerEngine {
         player.translate(-worldMatrix.getCellWidth(), 0);
     }
 
+    @Override
     public void movePlayerRight() {
         if (playerLastColIndex == worldMatrix.getColumCount() - 1) {
             return;
@@ -97,6 +101,8 @@ public class PlayerEngine {
         playerLastColIndex++;
         player.translate(worldMatrix.getCellWidth(), 0);
     }
+
+    //#endregion
 
     public void dispose() {
         playerTexture.dispose();

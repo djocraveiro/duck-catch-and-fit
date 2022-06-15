@@ -11,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
+import com.duckcatchandfit.game.ICommand;
+import com.duckcatchandfit.game.IGameControls;
 import com.duckcatchandfit.game.IGameNavigation;
 import com.duckcatchandfit.game.WorldMatrix;
 import com.duckcatchandfit.game.ducks.DuckEngine;
@@ -25,7 +27,7 @@ import com.duckcatchandfit.game.screens.components.HeadsUpDisplay;
 import java.util.List;
 import java.util.ListIterator;
 
-public class GameScreen implements Screen {
+public class GameScreen implements Screen, IGameControls {
 
     //#region Fields
 
@@ -192,6 +194,15 @@ public class GameScreen implements Screen {
 
         gameNavigation = null;
     }
+
+    //#region IGameControls
+
+    @Override
+    public void sendCommand(ICommand command){
+        command.apply(playerEngine);
+    }
+
+    //#endregion
 
     //#endregion
 
