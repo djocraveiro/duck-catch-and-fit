@@ -26,6 +26,7 @@ public class DuckEngine {
     private final Texture duckTexture;
 
     // Game objects
+    private Rectangle lastDuckBoundingBox;
     private final Random random = new Random();
     private final List<IDuck> ducks = new ArrayList<>();
 
@@ -34,6 +35,14 @@ public class DuckEngine {
     //#region Properties
 
     public List<IDuck> getDucks() { return ducks; }
+
+    public Rectangle getLastDuckBoundingBox() {
+        if (lastDuckBoundingBox != null) {
+            return lastDuckBoundingBox;
+        }
+
+        return null;
+    }
 
     //#endregion
 
@@ -56,9 +65,14 @@ public class DuckEngine {
             final int duckColIndex = getDuckColIndex();
             Rectangle boundingBox = worldMatrix.getCellBoundingBox(0, duckColIndex);
 
-            if (lockedBoundingBox == null || !lockedBoundingBox.overlaps(boundingBox)) {
+            final boolean canAdd = (lastDuckBoundingBox == null || !lastDuckBoundingBox.overlaps(boundingBox))
+                    && (lockedBoundingBox == null || !lockedBoundingBox.overlaps(boundingBox));
+
+            if (canAdd) {
                 Rectangle duckBoundingBox = new Rectangle(boundingBox);
                 ducks.add(new Duck(duckBoundingBox, duckTexture));
+
+                lastDuckBoundingBox = new Rectangle(duckBoundingBox);
 
                 duckTimer -= timeBetweenNewDucks;
             }

@@ -103,8 +103,12 @@ public class GameScreen implements Screen, IGameControls {
 
         renderBackground(deltaTime);
 
+        obstacleEngine.addObstacles(deltaTime, duckEngine.getLastDuckBoundingBox());
         duckEngine.addDucks(deltaTime, obstacleEngine.getLastObstacleBoundingBox());
+
         duckEngine.renderDucks(deltaTime, backgroundScrollingSpeed, batch);
+        int skippedObstacles = obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
+        score += skippedObstacles;
 
         playerEngine.renderLasers(deltaTime, backgroundScrollingSpeed, batch);
         playerEngine.renderPlayer(deltaTime, backgroundScrollingSpeed, batch);
@@ -116,10 +120,6 @@ public class GameScreen implements Screen, IGameControls {
 
             return;
         }
-
-        obstacleEngine.addObstacles(deltaTime);
-        int skippedObstacles = obstacleEngine.renderObstacles(deltaTime, backgroundScrollingSpeed, batch);
-        score += skippedObstacles;
 
         int ducksCaught = detectLaserAndDuckCollision();
         score += ducksCaught * 5;

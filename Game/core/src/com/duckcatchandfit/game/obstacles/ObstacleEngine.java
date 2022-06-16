@@ -26,7 +26,6 @@ public class ObstacleEngine {
     private final Texture rockTexture;
 
     // Game objects
-    private int lastObstacleColIndex;
     private Rectangle lastObstacleBoundingBox;
     private final Random random = new Random();
     private final List<IObstacle> obstacles = new ArrayList<>();
@@ -39,7 +38,7 @@ public class ObstacleEngine {
 
     public Rectangle getLastObstacleBoundingBox() {
         if (lastObstacleBoundingBox != null) {
-            return new Rectangle(lastObstacleBoundingBox);
+            return lastObstacleBoundingBox;
         }
 
         return null;
@@ -56,26 +55,27 @@ public class ObstacleEngine {
         this.obstacleTimer = timeBetweenNewObstacles;
         this.treeTexture = treeTexture;
         this.rockTexture = rockTexture;
-
-        lastObstacleColIndex = -1;
     }
 
     //#endregion
 
     //#region Public Methods
 
-    public void addObstacles(float deltaTime) {
+    public void addObstacles(float deltaTime, Rectangle lockedBoundingBox) {
         obstacleTimer += deltaTime;
 
         if (obstacleTimer > timeBetweenNewObstacles) {
-            lastObstacleColIndex = getObstacleColIndex();
+            final int lastObstacleColIndex = getObstacleColIndex();
             Rectangle boundingBox = worldMatrix.getCellBoundingBox(0, lastObstacleColIndex);
 
-            if (lastObstacleBoundingBox == null || !lastObstacleBoundingBox.overlaps(boundingBox)) {
+            final boolean canAdd = (lastObstacleBoundingBox == null || !lastObstacleBoundingBox.overlaps(boundingBox))
+                && (lockedBoundingBox == null || !lockedBoundingBox.overlaps(boundingBox));
+
+            if (canAdd) {
                 Rectangle obstacleBoundingBox = new Rectangle(boundingBox);
                 obstacles.add(new Obstacle(obstacleBoundingBox, getObstacleTexture()));
 
-                lastObstacleBoundingBox = worldMatrix.getCellBoundingBox(1, lastObstacleColIndex);
+                lastObstacleBoundingBox = new Rectangle(obstacleBoundingBox);
 
                 obstacleTimer -= timeBetweenNewObstacles;
             }
