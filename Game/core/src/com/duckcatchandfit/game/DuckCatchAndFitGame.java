@@ -6,19 +6,19 @@ import com.duckcatchandfit.game.screens.GameOverScreen;
 import com.duckcatchandfit.game.screens.GameScreen;
 import com.duckcatchandfit.game.screens.TitleScreen;
 
-public class DuckCatchAndFitGame extends Game implements IGameNavigation, IGameControls {
+public class DuckCatchAndFitGame extends Game implements IGameNavigation {
 
 	//#region Fields
 
 	private Screen screen;
-	private final IActionResolver actionResolver;
+	private final IGameController gameController;
 
 	//#endregion
 
 	//#region Initializers
 
-	public DuckCatchAndFitGame(IActionResolver actionResolver) {
-		this.actionResolver = actionResolver;
+	public DuckCatchAndFitGame(IGameController gameController) {
+		this.gameController = gameController;
 	}
 
 	//#endregion
@@ -56,16 +56,12 @@ public class DuckCatchAndFitGame extends Game implements IGameNavigation, IGameC
 			screen.dispose();
 		}
 
-		screen = new GameScreen(this);
+		screen = new GameScreen(this, gameController);
 		setScreen(screen);
-
-		actionResolver.startListeningSensors();
 	}
 
 	@Override
 	public void ShowGameOverScreen(int score) {
-		actionResolver.stopListeningSensors();
-
 		if (screen != null) {
 			screen.dispose();
 		}
@@ -75,17 +71,6 @@ public class DuckCatchAndFitGame extends Game implements IGameNavigation, IGameC
 	}
 
 	//#enregion
-
-	//#region IGameControls
-
-	@Override
-	public void sendCommand(ICommand command) {
-		if (screen != null && screen instanceof IGameControls) {
-			((IGameControls)screen).sendCommand(command);
-		}
-	}
-
-	//#endregion
 
 	//#endregion
 }

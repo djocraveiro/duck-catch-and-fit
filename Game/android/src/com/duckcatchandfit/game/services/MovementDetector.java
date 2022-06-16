@@ -1,56 +1,39 @@
-package com.duckcatchandfit.game;
+package com.duckcatchandfit.game.services;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
-import android.speech.RecognizerIntent;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.Toast;
-
 import com.badlogic.gdx.Gdx;
-import com.duckcatchandfit.game.commands.CommandIntentHelper;
+import com.duckcatchandfit.game.IGameControls;
 import com.duckcatchandfit.game.models.ActivityReading;
-import com.duckcatchandfit.game.services.DataCollector;
-import com.duckcatchandfit.game.services.FeatureExtractor;
-import com.duckcatchandfit.game.services.ICollectListener;
 import com.duckcatchandfit.game.utils.ApplicationExecutors;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-public class ActionResolverAndroid implements IActionResolver, ICollectListener {
+public class MovementDetector implements ICollectListener {
 
     //#region Fields
-
-    public static final int REQUEST_OK = 1;
-    private final String language;
 
     private final ApplicationExecutors exec = new ApplicationExecutors();
     private Context context;
 
     private final DataCollector dataCollector = new DataCollector();
     private final FeatureExtractor featureExtractor = new FeatureExtractor();
-    private Classifier classifier;
-    private Instances dataSet;
+    private final Classifier classifier;
+    private final Instances dataSet;
     private long lastLateralPrediction = 0;
     private String lastActivity = "";
-    private IGameControls gameControls;
-
-    //#endregion
-
-    //#region
-
-    public void setGameControls(IGameControls gameControls) {
-        this.gameControls = gameControls;
-    }
+    private IGameControls gameControls = null;
 
     //#endregion
 
     //#region Initializers
 
-    public ActionResolverAndroid(Context context) {
+    public MovementDetector(Context context) {
         this.context = context;
-        this.language = "en-US";
         this.classifier = loadModel();
         this.dataSet = loadDataSet();
 
@@ -61,47 +44,25 @@ public class ActionResolverAndroid implements IActionResolver, ICollectListener 
 
     //#region Public Methods
 
-    //#region IActionResolver
+    public void startListening(final IGameControls gameControls) {
+        this.gameControls = gameControls;
 
-    @Override
-    public void startListeningSensors() {
         dataCollector.startListeningSensors(context);
         dataCollector.startReadingInstance(DataCollector.COLLECT_MODE_INSTANCE_LOOP);
     }
 
-    @Override
-    public void stopListeningSensors() {
-        dataCollector.stopReadingInstance();
-        dataCollector.stopListeningSensors(context);
+    public void stopListening(final IGameControls gameControls) {
+        stopListeningSensors();
+
+        this.gameControls = null;
     }
 
-    @Override
-    public void showToast(final CharSequence toastMessage, final int toastDuration) {
-        exec.getMainThread().execute(() -> {
-            Toast.makeText(context, toastMessage, toastDuration).show();
-        });
+    public void dispose() {
+        stopListeningSensors();
+
+        context = null;
+        gameControls = null;
     }
-
-    @Override
-    public void showSpeechPopup() {
-        exec.getMainThread().execute(() -> {
-            Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
-            intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, language);
-
-            try {
-                // We open the Speech dialog here using a request code
-                // and retrieve the spoken text in AndroidLauncher's onActivityResult().
-                ((Activity) context).startActivityForResult(intent, REQUEST_OK);
-            }
-            catch (Exception e) {
-                showToast(e.toString(), 5000);
-                Gdx.app.log(ActionResolverAndroid.class.getName(),
-                        "error initializing speech engine" + e);
-            }
-        });
-    }
-
-    //#endregion
 
     //#region ICollectListener
 
@@ -119,28 +80,31 @@ public class ActionResolverAndroid implements IActionResolver, ICollectListener 
 
         lastActivity = activityLabel;
 
-        //Intent intent = CommandIntentHelper.createIntent(activityLabel);
-        //context.sendBroadcast(intent);
+        exec.getMainThread().execute(() -> {
+            if (gameControls != null) {
+                showToast(activityLabel);
 
-        ICommand command = CommandIntentHelper.readCommand(activityLabel);
-        if (command != null) {
-            exec.getMainThread().execute(() -> {
-                Toast.makeText(context, activityLabel, Toast.LENGTH_SHORT).show();
-                gameControls.sendCommand(command);
-            });
-        }
-    }
+                switch (activityLabel) {
+                    case ActivityReading.JUMP_LEFT:
+                        gameControls.getPlayerControls().movePlayerLeft();
+                        break;
 
-    public void dispose() {
-        stopListeningSensors();
-        context = null;
-        classifier = null;
-        dataSet = null;
+                    case ActivityReading.JUMP_RIGHT:
+                        gameControls.getPlayerControls().movePlayerRight();
+                        break;
+                }
+            }
+        });
     }
 
     //#endregion
 
     //#region Private Methods
+
+    private void stopListeningSensors() {
+        dataCollector.stopReadingInstance();
+        dataCollector.stopListeningSensors(context);
+    }
 
     private Classifier loadModel() {
         Classifier classifier = null;
@@ -177,7 +141,7 @@ public class ActionResolverAndroid implements IActionResolver, ICollectListener 
     }
 
     private String predictClass(final ActivityReading reading) {
-        final int SKIP_PREDICTION_MILLIS = 800;
+        final int SKIP_PREDICTION_MILLIS = 1000;
         boolean skipPrediction = System.currentTimeMillis() - lastLateralPrediction < SKIP_PREDICTION_MILLIS;
 
         final Instance unlabeledInstance = featureExtractor.toInstance(reading);
@@ -202,6 +166,14 @@ public class ActionResolverAndroid implements IActionResolver, ICollectListener 
 
             return "";
         }
+    }
+
+    private void showToast(String text) {
+        final Toast toast = Toast.makeText(context, text, Toast.LENGTH_SHORT);
+        toast.show();
+
+        new Handler(Looper.getMainLooper())
+            .postDelayed(toast::cancel, 600);
     }
 
     //#endregion

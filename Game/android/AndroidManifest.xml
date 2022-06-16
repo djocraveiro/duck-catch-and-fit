@@ -4,6 +4,7 @@
     package="com.duckcatchandfit.game">
 
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>

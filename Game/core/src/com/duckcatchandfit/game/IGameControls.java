@@ -1,6 +1,10 @@
 package com.duckcatchandfit.game;
 
+import com.duckcatchandfit.game.players.IPlayerControls;
+
 public interface IGameControls {
 
-    void sendCommand(ICommand command);
+    float getScreenWidth();
+
+    IPlayerControls getPlayerControls();
 }

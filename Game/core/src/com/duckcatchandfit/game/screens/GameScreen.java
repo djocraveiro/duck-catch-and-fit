@@ -11,15 +11,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.viewport.StretchViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
-import com.duckcatchandfit.game.ICommand;
-import com.duckcatchandfit.game.IGameControls;
-import com.duckcatchandfit.game.IGameNavigation;
-import com.duckcatchandfit.game.WorldMatrix;
+import com.duckcatchandfit.game.*;
 import com.duckcatchandfit.game.ducks.DuckEngine;
 import com.duckcatchandfit.game.ducks.IDuck;
 import com.duckcatchandfit.game.obstacles.IObstacle;
 import com.duckcatchandfit.game.players.ILaser;
 import com.duckcatchandfit.game.players.IPlayer;
+import com.duckcatchandfit.game.players.IPlayerControls;
 import com.duckcatchandfit.game.players.PlayerEngine;
 import com.duckcatchandfit.game.obstacles.ObstacleEngine;
 import com.duckcatchandfit.game.screens.components.HeadsUpDisplay;
@@ -52,6 +50,7 @@ public class GameScreen implements Screen, IGameControls {
     private final int WORLD_HEIGHT = 128;
 
     // Game objects
+    private IGameController gameController;
     private final ObstacleEngine obstacleEngine;
     private final PlayerEngine playerEngine;
     private final DuckEngine duckEngine;
@@ -61,8 +60,9 @@ public class GameScreen implements Screen, IGameControls {
 
     //#region Initializers
 
-    public GameScreen(IGameNavigation gameNavigation) {
+    public GameScreen(IGameNavigation gameNavigation, IGameController gameController) {
         this.gameNavigation = gameNavigation;
+        this.gameController = gameController;
 
         camera = new OrthographicCamera();
         viewport = new StretchViewport(WORLD_WIDTH, WORLD_HEIGHT, camera);
@@ -75,7 +75,7 @@ public class GameScreen implements Screen, IGameControls {
 
         WorldMatrix worldMatrix = new WorldMatrix(16, 16, worldBoundingBox);
 
-        obstacleEngine = new ObstacleEngine(worldMatrix, 2.2f,
+        obstacleEngine = new ObstacleEngine(worldMatrix, 3.0f,
                 new Texture("tree.png"),
                 new Texture("rock.png"));
 
@@ -147,41 +147,12 @@ public class GameScreen implements Screen, IGameControls {
 
     @Override
     public void hide() {
-        Gdx.input.setInputProcessor(null);
+
     }
 
     @Override
     public void show() {
-        Gdx.input.setInputProcessor(new InputAdapter() {
-            @Override
-            public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-                final float screenXCenter = viewport.getScreenWidth() / 2.0f;
-
-                if (screenX < screenXCenter) {
-                    playerEngine.movePlayerLeft();
-                }
-                else {
-                    playerEngine.movePlayerRight();
-                }
-
-                return true;
-            }
-
-            @Override
-            public boolean keyDown(int keycode) {
-                if (keycode == Input.Keys.LEFT) {
-                    playerEngine.movePlayerLeft();
-                }
-                else if (keycode == Input.Keys.RIGHT) {
-                    playerEngine.movePlayerRight();
-                }
-                else if (keycode == Input.Keys.SPACE) {
-                    playerEngine.fireLaser();
-                }
-
-                return true;
-            }
-        });
+        gameController.register(this);
     }
 
     @Override
@@ -193,13 +164,23 @@ public class GameScreen implements Screen, IGameControls {
         duckEngine.dispose();
 
         gameNavigation = null;
+
+        if (gameController != null) {
+            gameController.unregister(this);
+            gameController = null;
+        }
     }
 
     //#region IGameControls
 
     @Override
-    public void sendCommand(ICommand command){
-        command.apply(playerEngine);
+    public float getScreenWidth() {
+        return viewport.getScreenWidth();
+    }
+
+    @Override
+    public IPlayerControls getPlayerControls() {
+        return playerEngine;
     }
 
     //#endregion

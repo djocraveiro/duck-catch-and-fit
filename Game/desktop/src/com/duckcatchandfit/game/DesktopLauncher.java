@@ -14,8 +14,8 @@ public class DesktopLauncher {
 		config.setForegroundFPS(60);
 		config.setTitle("Duck Catch and Fit");
 
-		IActionResolver actionResolver = new ActionResolverDesktop();
-		new Lwjgl3Application(new DuckCatchAndFitGame(actionResolver), config);
+		IGameController gameController = new GameControllerDesktop();
+		new Lwjgl3Application(new DuckCatchAndFitGame(gameController), config);
 	}
 
 	//#endregion
