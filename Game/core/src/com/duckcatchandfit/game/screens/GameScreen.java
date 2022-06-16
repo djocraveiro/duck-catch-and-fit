@@ -1,8 +1,5 @@
 package com.duckcatchandfit.game.screens;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -44,6 +41,9 @@ public class GameScreen implements Screen, IGameControls {
     // Timing
     private float backgroundOffset = 0.0f;
     private final float backgroundScrollingSpeed;
+    private float speedUpdateTimer = 0;
+    private int speed = 1;
+    private float speedMultiplier = 1;
 
     // World parameters
     private final int WORLD_WIDTH = 72;
@@ -99,6 +99,8 @@ public class GameScreen implements Screen, IGameControls {
     public void render(float deltaTime) {
         batch.begin();
 
+        deltaTime = applySpeed(deltaTime);
+
         renderBackground(deltaTime);
 
         duckEngine.addDucks(deltaTime, obstacleEngine.getLastObstacleBoundingBox());
@@ -124,7 +126,7 @@ public class GameScreen implements Screen, IGameControls {
 
         detectLaserAndObstacleCollision();
 
-        headsUpDisplay.renderHeadsUpDisplay(score, 1, batch);
+        headsUpDisplay.renderHeadsUpDisplay(score, speed, batch);
 
         batch.end();
     }
@@ -188,6 +190,24 @@ public class GameScreen implements Screen, IGameControls {
     //#endregion
 
     //#region Private Methods
+
+    private float applySpeed(float deltaTime) {
+        final int MAX_SPEED = 5;
+        final float TIME_BETWEEN_UPDATES = 35.0f;
+
+        speedUpdateTimer += deltaTime;
+
+        if (speedUpdateTimer > TIME_BETWEEN_UPDATES) {
+            if (speed < MAX_SPEED) {
+                speed++;
+                speedMultiplier += 0.1f;
+            }
+
+            speedUpdateTimer -= TIME_BETWEEN_UPDATES;
+        }
+
+        return deltaTime * speedMultiplier;
+    }
 
     private void renderBackground(float deltaTime) {
         backgroundOffset += deltaTime * backgroundScrollingSpeed;
