@@ -1,6 +1,6 @@
-package com.duckcatchandfit.game.services;
+package com.duckcatchandfit.game.movement.services;
 
-import com.duckcatchandfit.game.models.ActivityReading;
+import com.duckcatchandfit.game.movement.models.ActivityReading;
 
 public interface ICollectListener {
     void onCollectStop();

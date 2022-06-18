@@ -3,10 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.duckcatchandfit.game">
 
-    <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <!-- The following permissions are required for movement recognition -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <!-- The following features are required for movement recognition -->
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>
     <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true"/>
     <uses-feature android:name="android.hardware.sensor.compass" android:required="true"/>

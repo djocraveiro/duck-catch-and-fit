@@ -1,4 +1,4 @@
-package com.duckcatchandfit.game.models;
+package com.duckcatchandfit.game.movement.models;
 
 import java.util.Date;
 import java.util.List;

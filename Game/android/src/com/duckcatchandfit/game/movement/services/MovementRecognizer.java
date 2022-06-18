@@ -1,4 +1,4 @@
-package com.duckcatchandfit.game.services;
+package com.duckcatchandfit.game.movement.services;
 
 import android.content.Context;
 import android.os.Handler;
@@ -6,14 +6,14 @@ import android.os.Looper;
 import android.widget.Toast;
 import com.badlogic.gdx.Gdx;
 import com.duckcatchandfit.game.IGameControls;
-import com.duckcatchandfit.game.models.ActivityReading;
+import com.duckcatchandfit.game.movement.models.ActivityReading;
 import com.duckcatchandfit.game.utils.ApplicationExecutors;
 import weka.classifiers.Classifier;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-public class MovementDetector implements ICollectListener {
+public class MovementRecognizer implements ICollectListener {
 
     //#region Fields
 
@@ -32,7 +32,7 @@ public class MovementDetector implements ICollectListener {
 
     //#region Initializers
 
-    public MovementDetector(Context context) {
+    public MovementRecognizer(Context context) {
         this.context = context;
         this.classifier = loadModel();
         this.dataSet = loadDataSet();
@@ -82,7 +82,7 @@ public class MovementDetector implements ICollectListener {
 
         exec.getMainThread().execute(() -> {
             if (gameControls != null) {
-                showToast(activityLabel);
+                //showToast(activityLabel);
 
                 switch (activityLabel) {
                     case ActivityReading.JUMP_LEFT:

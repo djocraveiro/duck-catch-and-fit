@@ -1,4 +1,4 @@
-package com.duckcatchandfit.game.services;
+package com.duckcatchandfit.game.movement.services;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -6,7 +6,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.Log;
-import com.duckcatchandfit.game.models.ActivityReading;
+import com.duckcatchandfit.game.movement.models.ActivityReading;
 import com.duckcatchandfit.game.utils.ApplicationExecutors;
 
 import java.util.Date;

@@ -1,6 +1,6 @@
-package com.duckcatchandfit.game.services;
+package com.duckcatchandfit.game.movement.services;
 
-import com.duckcatchandfit.game.models.IActivityReading;
+import com.duckcatchandfit.game.movement.models.IActivityReading;
 import com.duckcatchandfit.game.utils.MathHelper;
 import weka.core.Attribute;
 import weka.core.DenseInstance;
