@@ -10,19 +10,25 @@ import java.util.TimerTask;
 
 public class DelayedOperation {
 
-    private static final String LOG_TAG = DelayedOperation.class.getSimpleName();
+    //#region Fields
+
+    private static final String LOG_TAG = DelayedOperation.class.getName();
 
     public interface Operation {
         void onDelayedOperation();
         boolean shouldExecuteDelayedOperation();
     }
 
-    private long mDelay;
-    private Operation mOperation;
-    private Timer mTimer;
+    private final long delay;
+    private Operation operation;
+    private Timer timer;
     private boolean started;
-    private Context mContext;
-    private String mTag;
+    private Context context;
+    private final String tag;
+
+    //#endregion
+
+    //#region Initializers
 
     public DelayedOperation(Context context, String tag, long delayInMilliseconds) {
         if (context == null) {
@@ -33,55 +39,72 @@ public class DelayedOperation {
             throw new IllegalArgumentException("The delay in milliseconds must be > 0");
         }
 
-        mContext = context;
-        mTag = tag;
-        mDelay = delayInMilliseconds;
-        Log.d(LOG_TAG, "created delayed operation with tag: " + mTag);
+        this.context = context;
+        this.tag = tag;
+        delay = delayInMilliseconds;
+
+        Log.d(LOG_TAG, "created delayed operation with tag: " + this.tag);
     }
+
+    //#endregion
+
+    //#region Public Methods
 
     public void start(final Operation operation) {
         if (operation == null) {
             throw new IllegalArgumentException("The operation must be defined!");
         }
 
-        Log.d(LOG_TAG, "starting delayed operation with tag: " + mTag);
-        mOperation = operation;
+        Log.d(LOG_TAG, "starting delayed operation with tag: " + tag);
+
+        this.operation = operation;
         cancel();
         started = true;
         resetTimer();
     }
 
     public void resetTimer() {
-        if (!started) return;
+        if (!started) {
+            return;
+        }
 
-        if (mTimer != null) mTimer.cancel();
+        if (timer != null) {
+            timer.cancel();
+        }
 
-        Log.d(LOG_TAG, "resetting delayed operation with tag: " + mTag);
-        mTimer = new Timer();
-        mTimer.schedule(new TimerTask() {
+        Log.d(LOG_TAG, "resetting delayed operation with tag: " + tag);
+
+        timer = new Timer();
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                if (mOperation.shouldExecuteDelayedOperation()) {
-                    Log.d(LOG_TAG, "executing delayed operation with tag: " + mTag);
-                    new Handler(mContext.getMainLooper()).post(new Runnable() {
+                if (operation.shouldExecuteDelayedOperation()) {
+                    Log.d(LOG_TAG, "executing delayed operation with tag: " + tag);
+
+                    new Handler(context.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
-                            mOperation.onDelayedOperation();
+                            operation.onDelayedOperation();
                         }
                     });
                 }
+
                 cancel();
             }
-        }, mDelay);
+        }, delay);
     }
 
     public void cancel() {
-        if (mTimer != null) {
-            Log.d(LOG_TAG, "cancelled delayed operation with tag: " + mTag);
-            mTimer.cancel();
-            mTimer = null;
+        if (timer != null) {
+            Log.d(LOG_TAG, "cancelled delayed operation with tag: " + tag);
+
+            timer.cancel();
+            timer = null;
         }
 
         started = false;
+        context = null;
     }
+
+    //#endregion
 }

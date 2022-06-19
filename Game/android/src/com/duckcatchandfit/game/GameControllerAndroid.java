@@ -2,17 +2,16 @@ package com.duckcatchandfit.game;
 
 import android.content.Context;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.Input;
 import com.badlogic.gdx.InputAdapter;
-import com.duckcatchandfit.game.movement.services.MovementRecognizer;
-import com.duckcatchandfit.game.voice.services.VoiceRecognizer;
+import com.duckcatchandfit.game.movement.services.MovementController;
+import com.duckcatchandfit.game.voice.services.VoiceController;
 
 public class GameControllerAndroid implements IGameController {
 
     //#region Fields
 
-    private final MovementRecognizer movementRecognizer;
-    private final VoiceRecognizer voiceRecognizer;
+    private final MovementController movementController;
+    private final VoiceController voiceController;
     private boolean voiceEnabled = false;
 
     //#endregion
@@ -28,8 +27,8 @@ public class GameControllerAndroid implements IGameController {
     //#region Initializers
 
     public GameControllerAndroid(Context context) {
-         this.movementRecognizer = new MovementRecognizer(context);
-         this.voiceRecognizer = new VoiceRecognizer(context);
+         this.movementController = new MovementController(context);
+         this.voiceController = new VoiceController(context);
     }
 
     //#endregion
@@ -38,10 +37,10 @@ public class GameControllerAndroid implements IGameController {
 
     @Override
     public void register(final IGameControls gameControls) {
-        movementRecognizer.startListening(gameControls);
+        movementController.startListening(gameControls);
 
         if (voiceEnabled) {
-            voiceRecognizer.startListening(gameControls);
+            voiceController.startListening(gameControls);
         }
         else {
             Gdx.input.setInputProcessor(new InputAdapter() {
@@ -56,10 +55,10 @@ public class GameControllerAndroid implements IGameController {
 
     @Override
     public void unregister(final IGameControls gameControls) {
-        movementRecognizer.stopListening(gameControls);
+        movementController.stopListening(gameControls);
 
         if (voiceEnabled) {
-            voiceRecognizer.stopListening(gameControls);
+            voiceController.stopListening(gameControls);
         }
         else {
             Gdx.input.setInputProcessor(null);
@@ -67,8 +66,8 @@ public class GameControllerAndroid implements IGameController {
     }
 
     public void dispose() {
-        movementRecognizer.dispose();
-        voiceRecognizer.dispose();
+        movementController.dispose();
+        voiceController.dispose();
     }
 
     //#endregion

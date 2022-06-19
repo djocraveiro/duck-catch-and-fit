@@ -13,7 +13,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils;
 
-public class MovementRecognizer implements ICollectListener {
+public class MovementController {
 
     //#region Fields
 
@@ -28,16 +28,49 @@ public class MovementRecognizer implements ICollectListener {
     private String lastActivity = "";
     private IGameControls gameControls = null;
 
+    private final ICollectListener collectListener = new ICollectListener() {
+        @Override
+        public void onCollectStop() {
+            Gdx.app.log(getClass().getName(), "onCollectStop");
+        }
+
+        @Override
+        public void onInstanceCollected(final ActivityReading reading) {
+            final String activityLabel = predictClass(reading);
+            if (activityLabel.isEmpty() || lastActivity.equals(activityLabel)) {
+                return;
+            }
+
+            lastActivity = activityLabel;
+
+            exec.getMainThread().execute(() -> {
+                if (gameControls != null) {
+                    //showToast(activityLabel);
+
+                    switch (activityLabel) {
+                        case ActivityReading.JUMP_LEFT:
+                            gameControls.getPlayerControls().movePlayerLeft();
+                            break;
+
+                        case ActivityReading.JUMP_RIGHT:
+                            gameControls.getPlayerControls().movePlayerRight();
+                            break;
+                    }
+                }
+            });
+        }
+    };
+
     //#endregion
 
     //#region Initializers
 
-    public MovementRecognizer(Context context) {
+    public MovementController(Context context) {
         this.context = context;
         this.classifier = loadModel();
         this.dataSet = loadDataSet();
 
-        dataCollector.setCollectListener(this);
+        dataCollector.setCollectListener(collectListener);
     }
 
     //#endregion
@@ -62,39 +95,6 @@ public class MovementRecognizer implements ICollectListener {
 
         context = null;
         gameControls = null;
-    }
-
-    //#region ICollectListener
-
-    @Override
-    public void onCollectStop() {
-        Gdx.app.log(this.getClass().getName(), "onCollectStop");
-    }
-
-    @Override
-    public void onInstanceCollected(final ActivityReading reading) {
-        final String activityLabel = predictClass(reading);
-        if (activityLabel.isEmpty() || lastActivity.equals(activityLabel)) {
-            return;
-        }
-
-        lastActivity = activityLabel;
-
-        exec.getMainThread().execute(() -> {
-            if (gameControls != null) {
-                //showToast(activityLabel);
-
-                switch (activityLabel) {
-                    case ActivityReading.JUMP_LEFT:
-                        gameControls.getPlayerControls().movePlayerLeft();
-                        break;
-
-                    case ActivityReading.JUMP_RIGHT:
-                        gameControls.getPlayerControls().movePlayerRight();
-                        break;
-                }
-            }
-        });
     }
 
     //#endregion

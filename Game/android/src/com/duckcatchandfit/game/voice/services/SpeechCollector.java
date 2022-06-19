@@ -7,24 +7,20 @@ import android.speech.RecognitionListener;
 import android.speech.RecognizerIntent;
 import android.speech.SpeechRecognizer;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Helper class to easily work with Android speech recognition.
- *
- * @author Sachin Varma
- */
-public class Speech {
+//src: https://github.com/sachinvarma/Speech-Recognizer/blob/master/speech/src/main/java/com/sac/speech/Speech.java
+public class SpeechCollector {
 
-    private static final String LOG_TAG = Speech.class.getSimpleName();
+    //#region Fields
 
-    private SpeechRecognizer mSpeechRecognizer;
-    private final String mCallingPackage;
+    private static final String LOG_TAG = SpeechCollector.class.getName();
+
+    private SpeechRecognizer speechRecognizer;
     private boolean preferOffline = false;
     private boolean partialResults = true;
     private SpeechDelegate speechDelegate;
@@ -54,9 +50,9 @@ public class Speech {
             delayedStopListening.start(new DelayedOperation.Operation() {
                 @Override
                 public void onDelayedOperation() {
-                    returnPartialResultsAndRecreateSpeechRecognizer();
-                    Log.d("ReachedStop", "Stoppong");
-                    //  mListenerDelay.onClick("1");
+                    returnPartialResults();
+
+                    onStopOfSpeech();
                 }
 
                 @Override
@@ -73,8 +69,7 @@ public class Speech {
                     speechDelegate.onSpeechRmsChanged(v);
             }
             catch (final Throwable exc) {
-                Log.e(Speech.class.getSimpleName(),
-                        "Unhandled exception in delegate onSpeechRmsChanged", exc);
+                Log.e(LOG_TAG, "Unhandled exception in delegate onSpeechRmsChanged", exc);
             }
         }
 
@@ -88,7 +83,7 @@ public class Speech {
             if (partialResults != null && !partialResults.isEmpty()) {
                 partialData.clear();
                 partialData.addAll(partialResults);
-                Speech.this.unstableData = unstableData != null && !unstableData.isEmpty()
+                SpeechCollector.this.unstableData = unstableData != null && !unstableData.isEmpty()
                         ? unstableData.get(0) : null;
                 try {
                     if (lastPartialResults == null || !lastPartialResults.equals(partialResults)) {
@@ -100,8 +95,7 @@ public class Speech {
                     }
                 }
                 catch (final Throwable exc) {
-                    Log.e(Speech.class.getSimpleName(),
-                            "Unhandled exception in delegate onSpeechPartialResults", exc);
+                    Log.e(LOG_TAG, "Unhandled exception in delegate onSpeechPartialResults", exc);
                 }
             }
         }
@@ -111,52 +105,60 @@ public class Speech {
             delayedStopListening.cancel();
 
             final List<String> results = bundle.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION);
-
             final String result;
 
             if (results != null && !results.isEmpty()
-                    && results.get(0) != null && !results.get(0).isEmpty()) {
+                && results.get(0) != null && !results.get(0).isEmpty()) {
+
                 result = results.get(0);
             }
             else {
-                Log.i(Speech.class.getSimpleName(), "No speech results, getting partial");
+                Log.i(LOG_TAG, "No speech results, getting partial");
                 result = getPartialResultsAsString();
             }
 
             isListening = false;
 
             try {
-                if (speechDelegate != null)
+                if (speechDelegate != null) {
                     speechDelegate.onSpeechResult(result.trim());
+                }
             }
             catch (final Throwable exc) {
-                Log.e("Speech", "Unhandled exception in delegate onSpeechResult", exc);
+                Log.e(LOG_TAG, "Unhandled exception in delegate onSpeechResult", exc);
             }
 
             initSpeechRecognizer(context);
+
+            onStopOfSpeech();
         }
 
         @Override
         public void onError(final int code) {
             Log.e(LOG_TAG, "Speech recognition error", new SpeechRecognitionException(code));
-            returnPartialResultsAndRecreateSpeechRecognizer();
+
+            returnPartialResults();
+
+            onStopOfSpeech();
         }
 
         @Override
         public void onBufferReceived(final byte[] bytes) {
-            Log.i("Speech", "onBufferReceived");
+
         }
 
         @Override
         public void onEndOfSpeech() {
-            Log.i("Speech", "onEndOfSpeech");
+
         }
 
         @Override
         public void onEvent(final int i, final Bundle bundle) {
-            Log.i("Speech", "onEvent");
+
         }
     };
+
+    //#endregion
 
     //#region Properties
 
@@ -164,7 +166,7 @@ public class Speech {
         return isListening;
     }
 
-    public Speech setLocale(final Locale locale) {
+    public SpeechCollector setLocale(final Locale locale) {
         this.locale = locale;
         return this;
     }
@@ -176,7 +178,7 @@ public class Speech {
      * @param value true to prefer offline engine, false to use either one of the two
      * @return speech instance
      */
-    public Speech setPreferOffline(final boolean value) {
+    public SpeechCollector setPreferOffline(final boolean value) {
         preferOffline = value;
         return this;
     }
@@ -188,7 +190,7 @@ public class Speech {
      * @param value true to get also partial recognition results, false otherwise
      * @return speech instance
      */
-    public Speech setPartialResults(final boolean value) {
+    public SpeechCollector setPartialResults(final boolean value) {
         partialResults = value;
         return this;
     }
@@ -199,7 +201,7 @@ public class Speech {
      * @param milliseconds timeout in milliseconds
      * @return speech instance
      */
-    public Speech setStopListeningAfterInactivity(final long milliseconds) {
+    public SpeechCollector setStopListeningAfterInactivity(final long milliseconds) {
         stopListeningDelayInMs = milliseconds;
         initDelayedStopListening(context);
         return this;
@@ -212,78 +214,47 @@ public class Speech {
      * @param milliseconds minimum interval between state change in milliseconds
      * @return speech instance
      */
-    public Speech setTransitionMinimumDelay(final long milliseconds) {
+    public SpeechCollector setTransitionMinimumDelay(final long milliseconds) {
         transitionMinimumDelay = milliseconds;
         return this;
     }
 
     //#endregion
 
-    //#region Initializers
-
-    /**
-     * Initializes speech recognition.
-     *
-     * @param context        application context
-     * @param callingPackage The extra key used in an intent to the speech recognizer for
-     *                       voice search. Not generally to be used by developers.
-     *                       The system search dialog uses this, for example, to set a calling
-     *                       package for identification by a voice search API.
-     *                       If this extra is set by anyone but the system process,
-     *                       it should be overridden by the voice search implementation.
-     *                       By passing null or empty string (which is the default) you are
-     *                       not overriding the calling package
-     */
-    public Speech(final Context context, final String callingPackage) {
-        initSpeechRecognizer(context);
-        mCallingPackage = callingPackage;
-    }
-
-    //#endregion
-
     //#region
 
-    /**
-     * Starts voice recognition.
-     *
-     * @param delegate     delegate which will receive speech recognition events and status
-     * @throws SpeechRecognitionNotAvailable      when speech recognition is not available on the device
-     * @throws GoogleVoiceTypingDisabledException when google voice typing is disabled on the device
-     */
-    public void startListening(final SpeechDelegate delegate)
-            throws SpeechRecognitionNotAvailable, GoogleVoiceTypingDisabledException {
+    public synchronized void startListening(final Context context, final SpeechDelegate delegate)
+        throws SpeechRecognitionNotAvailable, GoogleVoiceTypingDisabledException {
+
         if (isListening) {
-            return;
+            throw new IllegalStateException("already listening");
         }
 
-        if (mSpeechRecognizer == null) {
-            throw new SpeechRecognitionNotAvailable();
+        if (context == null) {
+            throw new IllegalArgumentException("context must be defined");
         }
 
         if (delegate == null) {
-            throw new IllegalArgumentException("delegate must be defined!");
+            throw new IllegalArgumentException("delegate must be defined");
+        }
+
+        this.context = context;
+        speechDelegate = delegate;
+
+        initSpeechRecognizer(context);
+        if (speechRecognizer == null) {
+            throw new SpeechRecognitionNotAvailable();
         }
 
         if (throttleAction()) {
-            Log.d(getClass().getName(), "Hey man calm down! Throttling start to prevent disaster!");
+            Log.d(LOG_TAG, "Hey man calm down! Throttling start to prevent disaster!");
             return;
         }
 
-        speechDelegate = delegate;
-
-        final Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
-                .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
-                .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, partialResults)
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale.getLanguage())
-                .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, preferOffline);
-
-        if (mCallingPackage != null && !mCallingPackage.isEmpty()) {
-            intent.putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, mCallingPackage);
-        }
+        final Intent intent = buildSpeechRecognizerIntent();
 
         try {
-            mSpeechRecognizer.startListening(intent);
+            speechRecognizer.startListening(intent);
         }
         catch (final SecurityException exc) {
             throw new GoogleVoiceTypingDisabledException();
@@ -298,77 +269,68 @@ public class Speech {
             }
         }
         catch (final Throwable exc) {
-            Log.e(getClass().getName(), "Unhandled exception in delegate onStartOfSpeech", exc);
+            Log.e(LOG_TAG, "Unhandled exception in delegate onStartOfSpeech", exc);
         }
     }
 
-    /**
-     * Stops voice recognition listening.
-     * This method does nothing if voice listening is not active
-     */
-    public void stopListening() {
-        if (!isListening) {
-            return;
+    public synchronized void stopListening() {
+        if (speechRecognizer != null) {
+            try {
+
+                speechRecognizer.stopListening();
+                speechRecognizer.destroy();
+            }
+            catch( final Exception ex){
+                Log.e(LOG_TAG, "While stopping the speech recognizer", ex);
+            }
+            finally {
+                speechRecognizer = null;
+            }
         }
 
-        if (throttleAction()) {
-            Log.d(getClass().getSimpleName(), "Hey man calm down! Throttling stop to prevent disaster!");
-            return;
-        }
-
+        context = null;
+        speechDelegate = null;
         isListening = false;
         updateLastActionTimestamp();
-        returnPartialResultsAndRecreateSpeechRecognizer();
-    }
-
-    /**
-     * Must be called inside Activity's onDestroy.
-     */
-    public synchronized void shutdown() {
-        if (mSpeechRecognizer != null) {
-            try {
-                mSpeechRecognizer.stopListening();
-            }
-            catch (final Exception exc) {
-                Log.e(getClass().getName(), "Warning while de-initing speech recognizer", exc);
-            }
-        }
-
-        speechDelegate = null;
     }
 
     //#endregion
 
     private void initSpeechRecognizer(final Context context) {
-        if (context == null) {
-            throw new IllegalArgumentException("context must be defined!");
-        }
-
-        this.context = context;
-
         if (SpeechRecognizer.isRecognitionAvailable(context)) {
-            if (mSpeechRecognizer != null) {
+            if (speechRecognizer != null) {
                 try {
-                    mSpeechRecognizer.destroy();
+                    speechRecognizer.destroy();
                 }
                 catch (final Throwable exc) {
-                    Log.d(getClass().getName(), "Non-Fatal error while destroying speech. " + exc.getMessage());
+                    Log.d(LOG_TAG, "Non-Fatal error while destroying speech. " + exc.getMessage());
                 }
                 finally {
-                    mSpeechRecognizer = null;
+                    speechRecognizer = null;
                 }
             }
 
-            mSpeechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
-            mSpeechRecognizer.setRecognitionListener(recognitionListener);
+            speechRecognizer = SpeechRecognizer.createSpeechRecognizer(context);
+            speechRecognizer.setRecognitionListener(recognitionListener);
+
             initDelayedStopListening(context);
         }
         else {
-            mSpeechRecognizer = null;
+            speechRecognizer = null;
         }
 
         partialData.clear();
         unstableData = null;
+    }
+
+    private Intent buildSpeechRecognizerIntent() {
+        return new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)
+            .putExtra(RecognizerIntent.EXTRA_MAX_RESULTS, 1)
+            .putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, partialResults)
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE, locale.getLanguage())
+            .putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            .putExtra(RecognizerIntent.EXTRA_PREFER_OFFLINE, preferOffline)
+            .putExtra(RecognizerIntent.EXTRA_CALLING_PACKAGE, context.getPackageName());
     }
 
     private void initDelayedStopListening(final Context context) {
@@ -377,19 +339,39 @@ public class Speech {
             delayedStopListening = null;
         }
 
-        if (speechDelegate != null) {
-            speechDelegate.onStopOfSpeech();
-        }
-
         delayedStopListening = new DelayedOperation(context, "delayStopListening", stopListeningDelayInMs);
     }
 
     private void updateLastActionTimestamp() {
-        lastActionTimestamp = new Date().getTime();
+        lastActionTimestamp = System.currentTimeMillis();
     }
 
     private boolean throttleAction() {
         return (new Date().getTime() <= (lastActionTimestamp + transitionMinimumDelay));
+    }
+
+    private void returnPartialResults() {
+        isListening = false;
+
+        try {
+            if (speechDelegate != null) {
+                speechDelegate.onSpeechResult(getPartialResultsAsString());
+            }
+        }
+        catch (final Throwable ex) {
+            Log.e(LOG_TAG, "Unhandled exception in delegate onSpeechResult", ex);
+        }
+    }
+
+    private void onStopOfSpeech() {
+        try {
+            if (speechDelegate != null) {
+                speechDelegate.onStopOfSpeech();
+            }
+        }
+        catch (final Throwable ex) {
+            Log.e(LOG_TAG, "Unhandled exception in delegate onStopOfSpeech", ex);
+        }
     }
 
     private String getPartialResultsAsString() {
@@ -405,21 +387,4 @@ public class Speech {
 
         return out.toString().trim();
     }
-
-    private void returnPartialResultsAndRecreateSpeechRecognizer() {
-        isListening = false;
-
-        try {
-            if (speechDelegate != null && partialResults) {
-                speechDelegate.onSpeechResult(getPartialResultsAsString());
-            }
-        }
-        catch (final Throwable exc) {
-            Log.e(Speech.class.getSimpleName(), "Unhandled exception in delegate onSpeechResult", exc);
-        }
-
-        // recreate the speech recognizer
-        initSpeechRecognizer(context);
-    }
-
 }

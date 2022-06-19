@@ -92,7 +92,7 @@ public class DataCollector implements SensorEventListener {
             @Override
             public void run() {
                 exec.getBackground().execute(() -> {
-                    Log.d("DataCollector", "collect-task-running");
+                    //Log.d("DataCollector", "collect-task-running");
 
                     copyDataToInstance();
 
