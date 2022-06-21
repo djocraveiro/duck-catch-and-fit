@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+// Formulas src: https://github.com/hcmlab/ssj/blob/master/libssj/src/main/java/hcm/ssj/body/AccelerationFeatures.java
+
 public class MathHelper {
 
     public static float sum(final List<Float> values) {

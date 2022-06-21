@@ -9,6 +9,8 @@ import org.apache.commons.math3.transform.DftNormalization;
 import org.apache.commons.math3.transform.FastFourierTransformer;
 import org.apache.commons.math3.transform.TransformType;
 
+// Formulas src: https://github.com/hcmlab/ssj/blob/master/libssj/src/main/java/hcm/ssj/body/AccelerationFeatures.java
+
 public class MathHelper {
 
     public static float sum(final List<Float> values) {

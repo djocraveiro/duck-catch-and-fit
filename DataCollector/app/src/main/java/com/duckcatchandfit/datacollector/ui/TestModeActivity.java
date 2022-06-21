@@ -234,7 +234,7 @@ public class TestModeActivity extends AppCompatActivity implements ICollectListe
     }
 
     private String predictClass(final ActivityReading reading) {
-        final int SKIP_PREDICTION_MILLIS = 800;
+        final int SKIP_PREDICTION_MILLIS = 1000;
         boolean skipPrediction = System.currentTimeMillis() - lastLateralPrediction < SKIP_PREDICTION_MILLIS;
 
         final Instance unlabeledInstance = featureExtractor.toInstance(reading);
