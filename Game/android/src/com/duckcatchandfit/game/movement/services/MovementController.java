@@ -3,8 +3,8 @@ package com.duckcatchandfit.game.movement.services;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
-import com.badlogic.gdx.Gdx;
 import com.duckcatchandfit.game.IGameControls;
 import com.duckcatchandfit.game.movement.models.ActivityReading;
 import com.duckcatchandfit.game.utils.ApplicationExecutors;
@@ -31,7 +31,7 @@ public class MovementController {
     private final ICollectListener collectListener = new ICollectListener() {
         @Override
         public void onCollectStop() {
-            Gdx.app.log(getClass().getName(), "onCollectStop");
+
         }
 
         @Override
@@ -114,7 +114,7 @@ public class MovementController {
             classifier = (Classifier) weka.core.SerializationHelper.read(context.getAssets().open(modelFile));
         }
         catch (Exception e) {
-            Gdx.app.log(this.getClass().getName(), "Error loading the model - " + e.getMessage());
+            Log.d(getClass().getName(), "Error loading the model - " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -133,7 +133,7 @@ public class MovementController {
             dataSet.setClassIndex(classIndex);
         }
         catch (Exception e) {
-            Gdx.app.log(this.getClass().getName(), "Error loading the dataSet - " + e.getMessage());
+            Log.d(getClass().getName(), "Error loading the dataSet - " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -161,7 +161,7 @@ public class MovementController {
             return label;
         }
         catch (Exception e) {
-            Gdx.app.log(this.getClass().getName(), "Prediction ERROR - " + e.getMessage());
+            Log.d(getClass().getName(), "Prediction ERROR - " + e.getMessage());
             e.printStackTrace();
 
             return "";
